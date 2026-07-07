@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -197,14 +197,9 @@
         .content-section .subtitle {
             font-size: 17px;
             color: #5a5a5a;
-            margin-bottom: 20px;
+            margin-bottom: 0;
             line-height: 1.6;
             font-style: italic;
-        }
-
-        /* 统一所有文本为 H2 级标题样式（废弃，保留以兼容） */
-        .content-section .placeholder-heading {
-            display: none;
         }
 
         /* ========== 联系我们页脚 ========== */
@@ -281,7 +276,7 @@
 <body>
     <div id="app">
         <!-- 无障碍跳过链接 -->
-        <a href="#main-content" class="skip-link">跳到主要内容</a>
+        <a href="#main-content" class="skip-link">Skip to main content</a>
 
         <!-- 头部 + 导航栏 -->
         <header class="app-header">
@@ -291,25 +286,29 @@
                 </div>
                 <h1>XO Tactile Voice Power Bank</h1>
             </div>
-            <nav class="nav-bar" aria-label="主导航">
+            <nav class="nav-bar" aria-label="Main navigation">
                 <button
                     v-for="item in navItems"
                     :key="item.id"
                     class="nav-btn"
                     :class="{ 'nav-btn--active': activeSection === item.id }"
                     :aria-current="activeSection === item.id ? 'true' : undefined"
-                    :aria-label="'跳转到' + item.label"
+                    :aria-label="'Go to ' + item.label"
                     @click="scrollToSection(item.id)"
                 >{{ item.label }}</button>
             </nav>
         </header>
 
         <!-- 主内容区 -->
-        <main class="app-main" id="main-content" aria-label="主要内容">
+        <main class="app-main" id="main-content" aria-label="Main content">
             <!-- 1. 产品概览 -->
             <section id="overview" class="content-section" aria-labelledby="overview-title">
                 <h2 id="overview-title">Product Overview</h2>
-                <p class="subtitle">Accessibility-Focused Design, Non-Visual Power Check</p>
+                <div tabindex="0" aria-label="Accessibility-Focused Design, Non-Visual Power Check.">
+                    <div aria-hidden="true">
+                        <p class="subtitle">Accessibility-Focused Design, Non-Visual Power Check</p>
+                    </div>
+                </div>
                 <div tabindex="0" aria-label="Front View. The lower front features a tactile brand logo, with the tactile brand name WUJIE above it. The upper right corner contains four LED battery indicators showing the remaining battery level, while a fifth green LED indicates fast charging. The upper left side has a multifunction button for checking battery level and switching operating modes.">
                     <div aria-hidden="true">
                         <h3>Front View</h3>
@@ -333,11 +332,15 @@
             <!-- 2. 按键功能 -->
             <section id="buttons" class="content-section" aria-labelledby="buttons-title">
                 <h2 id="buttons-title">Button Functions</h2>
-                <ul>
-                    <li><strong>Single Press:</strong> Check battery level</li>
-                    <li><strong>Double Press:</strong> Turn voice prompts on/off (Silent Mode)</li>
-                    <li><strong>Long Press:</strong> Switch between Voice Mode, Tactile Mode, and Voice + Tactile Mode</li>
-                </ul>
+                <div tabindex="0" aria-label="Button Functions. Single Press: Check battery level. Double Press: Turn voice prompts on or off, also called Silent Mode. Long Press: Switch between Voice Mode, Tactile Mode, and Voice plus Tactile Mode.">
+                    <div aria-hidden="true">
+                        <ul>
+                            <li><strong>Single Press:</strong> Check battery level</li>
+                            <li><strong>Double Press:</strong> Turn voice prompts on/off (Silent Mode)</li>
+                            <li><strong>Long Press:</strong> Switch between Voice Mode, Tactile Mode, and Voice + Tactile Mode</li>
+                        </ul>
+                    </div>
+                </div>
             </section>
 
             <!-- 3. 电池指示灯 -->
@@ -410,7 +413,11 @@
             <!-- 7. 我们期待您的反馈 -->
             <section id="feedback" class="content-section" aria-labelledby="feedback-title">
                 <h2 id="feedback-title">We'd Love Your Feedback</h2>
-                <p>Please share your feedback on the packaging, tactile design, voice prompts, and overall experience.</p>
+                <div tabindex="0" aria-label="We'd Love Your Feedback. Please share your feedback on the packaging, tactile design, voice prompts, and overall experience.">
+                    <div aria-hidden="true">
+                        <p>Please share your feedback on the packaging, tactile design, voice prompts, and overall experience.</p>
+                    </div>
+                </div>
             </section>
         </main>
 
