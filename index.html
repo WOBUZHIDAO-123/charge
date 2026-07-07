@@ -1,0 +1,519 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>XO Tactile Voice Power Bank</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+    <style>
+        
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html {
+            scroll-behavior: smooth;
+            font-size: 16px;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+                         "Microsoft YaHei", "Helvetica Neue", sans-serif;
+            line-height: 1.6;
+            color: #1a1a1a;
+            background: #fff;
+            -webkit-text-size-adjust: 100%;
+        }
+
+        /* ========== 跳过导航链接（视觉隐藏，聚焦时显示） ========== */
+        .skip-link {
+            position: absolute;
+            top: -100px;
+            left: 16px;
+            background: #2d2d2d;
+            color: #FFFFF0;
+            padding: 12px 24px;
+            font-size: 18px;
+            font-weight: bold;
+            z-index: 1000;
+            text-decoration: none;
+        }
+        .skip-link:focus {
+            top: 16px;
+        }
+
+        /* ========== Header ========== */
+        .app-header {
+            background: #2d2d2d;
+            padding: 16px 16px 16px;
+            color: #FFFFF0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        /* header 顶部行：logo + 标题 */
+        .header-top {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 16px;
+            min-height: 48px;
+        }
+
+        .header-logo-wrap {
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #fff;
+            display: flex;
+            align-items: center;
+        }
+
+        .header-logo-wrap img {
+            height: 48px;
+            width: auto;
+            display: block;
+            object-fit: contain;
+        }
+
+        .header-top h1 {
+            font-size: 26px;
+            margin: 0;
+            letter-spacing: 2px;
+            white-space: nowrap;
+        }
+
+        /* ========== 导航栏：大容器装8个按钮 ========== */
+        .nav-bar {
+            display: flex;
+            flex-wrap: nowrap;
+            justify-content: center;
+            gap: 10px;
+            margin: 0 auto;
+        }
+
+        .nav-btn {
+            /* 大按钮，方便盲人触碰 */
+            min-height: 56px;
+            min-width: 130px;
+            padding: 14px 22px;
+            font-size: 18px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            color: #1a1a1a;
+            background: #fff;
+            border: 3px solid #e0dcd4;
+            cursor: pointer;
+            transition: background 0.15s, border-color 0.15s, transform 0.1s;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            white-space: nowrap;
+        }
+
+        .nav-btn:hover {
+            background: rgba(173, 216, 230, 0.4);
+        }
+
+        .nav-btn:active {
+            transform: scale(0.96);
+        }
+
+        /* 当前激活的导航按钮 */
+        .nav-btn--active {
+            background: #fff;
+            color: #1a1a1a;
+            border: 6px solid #003366;
+            font-weight: 700;
+        }
+
+        /* ========== 主内容区 ========== */
+        .app-main {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 24px 16px 60px;
+        }
+
+        .content-section {
+            min-height: 380px;
+            margin-bottom: 32px;
+            padding: 28px 24px;
+            background: #fff;
+            border-left: 6px solid #2d2d2d;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            /* 方案 D：动态避开 sticky header 遮挡 */
+            scroll-margin-top: var(--header-height, 120px);
+        }
+
+        .content-section h2 {
+            font-size: 24px;
+            color: #2d2d2d;
+            margin-bottom: 16px;
+            letter-spacing: 1px;
+        }
+
+        .content-section h3 {
+            font-size: 20px;
+            color: #2d2d2d;
+            margin-top: 20px;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .content-section p {
+            font-size: 18px;
+            color: #333;
+            line-height: 1.8;
+            margin-bottom: 10px;
+        }
+
+        .content-section ul {
+            list-style: none;
+            padding-left: 0;
+            margin-bottom: 12px;
+        }
+
+        .content-section li {
+            font-size: 18px;
+            color: #333;
+            line-height: 1.8;
+            padding-left: 24px;
+            position: relative;
+            margin-bottom: 6px;
+        }
+
+        .content-section li::before {
+            content: "·";
+            position: absolute;
+            left: 8px;
+            font-weight: bold;
+            color: #2d2d2d;
+        }
+
+        .content-section .subtitle {
+            font-size: 17px;
+            color: #5a5a5a;
+            margin-bottom: 20px;
+            line-height: 1.6;
+            font-style: italic;
+        }
+
+        /* 统一所有文本为 H2 级标题样式（废弃，保留以兼容） */
+        .content-section .placeholder-heading {
+            display: none;
+        }
+
+        /* ========== 联系我们页脚 ========== */
+        .contact-footer {
+            width: 100%;
+            padding: 40px 24px;
+            background: #2d2d2d;
+            text-align: center;
+            color: #FFFFF0;
+            font-size: 18px;
+            line-height: 2;
+        }
+
+        .contact-footer h2 {
+            font-size: 24px;
+            color: #FFFFF0;
+            margin-bottom: 12px;
+            letter-spacing: 1px;
+        }
+
+        .contact-footer p {
+            color: #ccc;
+        }
+
+        /* ========== 响应式：导航栏折行 ========== */
+        @media (max-width: 1120px) {
+            .nav-bar {
+                flex-wrap: wrap;
+            }
+        }
+
+        /* ========== 响应式：logo 移至标题下方 ========== */
+        @media (max-width: 768px) {
+            .header-top {
+                flex-direction: column;
+                gap: 12px;
+                min-height: auto;
+            }
+            .header-top h1 {
+                order: 1;
+                font-size: 22px;
+            }
+            .header-logo-wrap {
+                order: 2;
+                position: static;
+                transform: none;
+                width: 100%;
+                justify-content: center;
+                padding: 8px 16px;
+            }
+            .header-logo-wrap img {
+                margin: 0 auto;
+                height: 40px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .app-header h1 {
+                font-size: 22px;
+            }
+            .nav-btn {
+                min-height: 52px;
+                min-width: 100px;
+                padding: 12px 14px;
+                font-size: 16px;
+            }
+            .content-section {
+                min-height: 300px;
+                padding: 20px 16px;
+            }
+            .content-section h2 {
+                font-size: 21px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <!-- 无障碍跳过链接 -->
+        <a href="#main-content" class="skip-link">跳到主要内容</a>
+
+        <!-- 头部 + 导航栏 -->
+        <header class="app-header">
+            <div class="header-top">
+                <div class="header-logo-wrap">
+                    <img src="resource/product-logo.png" alt="Product Logo">
+                </div>
+                <h1>XO Tactile Voice Power Bank</h1>
+            </div>
+            <nav class="nav-bar" aria-label="主导航">
+                <button
+                    v-for="item in navItems"
+                    :key="item.id"
+                    class="nav-btn"
+                    :class="{ 'nav-btn--active': activeSection === item.id }"
+                    :aria-current="activeSection === item.id ? 'true' : undefined"
+                    :aria-label="'跳转到' + item.label"
+                    @click="scrollToSection(item.id)"
+                >{{ item.label }}</button>
+            </nav>
+        </header>
+
+        <!-- 主内容区 -->
+        <main class="app-main" id="main-content" aria-label="主要内容">
+            <!-- 1. 产品概览 -->
+            <section id="overview" class="content-section" aria-labelledby="overview-title">
+                <h2 id="overview-title">Product Overview</h2>
+                <p class="subtitle">Accessibility-Focused Design, Non-Visual Power Check</p>
+                <h3>Front View</h3>
+                <p>The lower front features a tactile brand logo, with the tactile brand name 'WUJIE' above it. The upper-right corner contains four LED battery indicators showing the remaining battery level, while a fifth green LED indicates fast charging. The upper-left side has a multifunction button for checking battery level and switching operating modes.</p>
+                <h3>Top View</h3>
+                <p>From left to right: 4-dot tactile battery indicator, speaker, USB-C port, speaker, and USB-A port. Dual speakers provide clear voice announcements, while dual charging ports support multiple devices.</p>
+                <h3>Tactile Battery Indicator</h3>
+                <p>The four tactile dots are the core accessibility feature. By feeling the number of raised dots, users can independently identify the remaining battery level in both quiet and noisy environments.</p>
+            </section>
+
+            <!-- 2. 按键功能 -->
+            <section id="buttons" class="content-section" aria-labelledby="buttons-title">
+                <h2 id="buttons-title">Button Functions</h2>
+                <ul>
+                    <li><strong>Single Press:</strong> Check battery level</li>
+                    <li><strong>Double Press:</strong> Turn voice prompts on/off (Silent Mode)</li>
+                    <li><strong>Long Press:</strong> Switch between Voice Mode, Tactile Mode, and Voice + Tactile Mode</li>
+                </ul>
+            </section>
+
+            <!-- 3. 电池指示灯 -->
+            <section id="led" class="content-section" aria-labelledby="led-title">
+                <h2 id="led-title">Tactile Power Prompt</h2>
+                <p>Under dot mode and VoiceOver + dot dual mode, tap the button to get battery level reminder:</p>
+                <ul>
+                    <li><strong>4 dots:</strong> 75–100% power remaining</li>
+                    <li><strong>3 dots:</strong> 50–75% power remaining</li>
+                    <li><strong>2 dots:</strong> 25–50% power remaining</li>
+                    <li><strong>1 dot:</strong> 0–25% power remaining</li>
+                </ul>
+            </section>
+
+            <!-- 4. 语音提示 -->
+            <section id="voice" class="content-section" aria-labelledby="voice-title">
+                <h2 id="voice-title">Voice Prompts</h2>
+                <ul>
+                    <li>Start charge</li>
+                    <li>Start discharge</li>
+                    <li>Battery Full</li>
+                    <li>Battery Low</li>
+                    <li>Please charge</li>
+                    <li>Remaining Battery Percentage</li>
+                </ul>
+            </section>
+
+            <!-- 5. 产品规格 -->
+            <section id="specs" class="content-section" aria-labelledby="specs-title">
+                <h2 id="specs-title">Product Specifications</h2>
+                <ul>
+                    <li><strong>Battery Capacity:</strong> 10,000mAh</li>
+                    <li><strong>Maximum Fast Charging Output:</strong> 22.5W</li>
+                    <li><strong>USB-C Port:</strong> Support Input &amp; Output</li>
+                    <li><strong>USB-A Port:</strong> Support Output Only</li>
+                    <li><strong>Product Dimensions:</strong> 145 × 73 × 16 mm</li>
+                    <li><strong>Net Weight:</strong> 208 g</li>
+                </ul>
+            </section>
+
+            <!-- 6. 常见问题 -->
+            <section id="faq" class="content-section" aria-labelledby="faq-title">
+                <h2 id="faq-title">Frequently Asked Questions</h2>
+                <p><strong>Why doesn't it speak?</strong></p>
+                <p>Double press the button to enable voice prompts.</p>
+                <p><strong>Can I charge multiple devices?</strong></p>
+                <p>Yes.</p>
+            </section>
+
+            <!-- 7. 我们期待您的反馈 -->
+            <section id="feedback" class="content-section" aria-labelledby="feedback-title">
+                <h2 id="feedback-title">We'd Love Your Feedback</h2>
+                <p>Please share your feedback on the packaging, tactile design, voice prompts, and overall experience.</p>
+            </section>
+        </main>
+
+        <!-- 联系我们页脚（全宽） -->
+        <footer class="contact-footer" id="contact" aria-labelledby="contact-title">
+            <h2 id="contact-title">Contact Us</h2>
+            <p><strong>Website:</strong> https://s.wujieqh.com/</p>
+            <p><strong>Email:</strong> support@wujieqh.com</p>
+            <p><strong>WhatsApp:</strong> +1 610 781 6556</p>
+            <br>
+            <p>Thank you for choosing XO.</p>
+            <p>&copy; 2026 Chongqing Infinite Horizons Co., Ltd.</p>
+        </footer>
+    </div>
+
+    <script>
+        const { createApp, ref, onMounted, onUnmounted } = Vue;
+
+        createApp({
+            setup() {
+                const navItems = [
+                    { id: 'overview',  label: '产品概览' },
+                    { id: 'buttons',   label: '按键功能' },
+                    { id: 'led',       label: '电池指示灯' },
+                    { id: 'voice',     label: '语音提示' },
+                    { id: 'specs',     label: '产品规格' },
+                    { id: 'faq',       label: '常见问题' },
+                    { id: 'feedback',  label: '我们期待您的反馈' },
+                    { id: 'contact',   label: '联系我们' },
+                ];
+
+                const activeSection = ref('overview');
+
+                function scrollToSection(id) {
+                    activeSection.value = id;
+                    const el = document.getElementById(id);
+                    if (el) {
+                        // 锁定滚动检测，防止 smooth 滚动期间自动修正
+                        scrollLock = true;
+                        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        // 滚动动画约 500ms 后解锁
+                        setTimeout(() => { scrollLock = false; }, 600);
+                        const heading = el.querySelector('h2');
+                        if (heading) {
+                            heading.setAttribute('tabindex', '-1');
+                            heading.focus({ preventScroll: true });
+                        }
+                    }
+                }
+
+                // 滚动监听：动态读取 header 高度作为阈值，修正定位偏差
+                let scrollTimer = null;
+                let scrollLock = false;
+                function onScroll() {
+                    // 程序化滚动期间跳过自动检测，避免覆盖用户点击
+                    if (scrollLock) return;
+                    if (scrollTimer) return;
+                    scrollTimer = setTimeout(() => {
+                        scrollTimer = null;
+                        const headerH = parseFloat(
+                            getComputedStyle(document.documentElement).getPropertyValue('--header-height')
+                        ) || 120;
+                        let current = navItems[0].id;
+                        for (const item of navItems) {
+                            const el = document.getElementById(item.id);
+                            if (!el) continue;
+                            const rect = el.getBoundingClientRect();
+                            // section 顶部到达 header 底部时即为当前栏目
+                            if (rect.top <= headerH + 10) {
+                                current = item.id;
+                            }
+                        }
+                        // 如果已滚动到页面底部，强制高亮最后一个栏目（联系我们页脚）
+                        const scrollBottom = window.scrollY + window.innerHeight;
+                        const pageBottom = document.documentElement.scrollHeight;
+                        if (pageBottom - scrollBottom <= 2) {
+                            current = navItems[navItems.length - 1].id;
+                        }
+                        activeSection.value = current;
+                    }, 80);
+                }
+
+                // ResizeObserver：动态测量 header 高度，写入 CSS 变量
+                let headerObserver = null;
+
+                onMounted(() => {
+                    window.addEventListener('scroll', onScroll, { passive: true });
+
+                    // 动态对齐 logo 与第一个导航按钮
+                    const logoWrap = document.querySelector('.header-logo-wrap');
+                    const firstBtn = document.querySelector('.nav-btn');
+                    const headerTop = document.querySelector('.header-top');
+
+                    function alignLogo() {
+                        if (!logoWrap || !firstBtn || !headerTop) return;
+                        // 小屏时 position:static，无需对齐
+                        if (window.innerWidth <= 768) {
+                            logoWrap.style.left = '';
+                            return;
+                        }
+                        const btnRect = firstBtn.getBoundingClientRect();
+                        const topRect = headerTop.getBoundingClientRect();
+                        // logo left = 第一个按钮左边缘 - header-top 左边缘
+                        logoWrap.style.left = (btnRect.left - topRect.left) + 'px';
+                    }
+
+                    alignLogo();
+                    window.addEventListener('resize', alignLogo);
+
+                    if (headerEl) {
+                        headerObserver = new ResizeObserver((entries) => {
+                            for (const entry of entries) {
+                                const h = entry.borderBoxSize?.[0]?.blockSize
+                                       || entry.contentRect.height;
+                                document.documentElement.style.setProperty('--header-height', h + 'px');
+                            }
+                            alignLogo();
+                        });
+                        headerObserver.observe(headerEl);
+                    }
+                });
+                onUnmounted(() => {
+                    window.removeEventListener('scroll', onScroll);
+                    if (headerObserver) {
+                        headerObserver.disconnect();
+                        headerObserver = null;
+                    }
+                });
+
+                return { navItems, activeSection, scrollToSection };
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>
