@@ -52,6 +52,8 @@
             position: sticky;
             top: 0;
             z-index: 100;
+            /* 确保 header 有明确的高度用于计算 */
+            min-height: 80px; 
         }
 
         /* header 顶部行：logo + 标题 */
@@ -95,6 +97,8 @@
             justify-content: center;
             gap: 10px;
             margin: 0 auto;
+            /* 增加一点内边距，防止焦点框被切掉 */
+            padding: 4px; 
         }
 
         .nav-btn {
@@ -109,10 +113,12 @@
             background: #fff;
             border: 3px solid #e0dcd4;
             cursor: pointer;
-            transition: background 0.15s, border-color 0.15s, transform 0.1s;
+            transition: background 0.15s, border-color 0.15s, transform 0.1s, box-shadow 0.15s;
             user-select: none;
             -webkit-tap-highlight-color: transparent;
             white-space: nowrap;
+            /* 关键：移除默认 outline，用 box-shadow 或 border 替代，或者保留 outline 但美化它 */
+            outline: none; 
         }
 
         .nav-btn:hover {
@@ -121,6 +127,15 @@
 
         .nav-btn:active {
             transform: scale(0.96);
+        }
+
+        /* 【修复点1】增强焦点可见性：无论是键盘还是脚本 focus，都显示明显边框 */
+        .nav-btn:focus-visible,
+        .nav-btn:focus {
+            outline: 4px solid #ffcc00; /* 高对比度黄色 */
+            outline-offset: 2px;
+            z-index: 10; /* 确保焦点框在最上层 */
+            position: relative;
         }
 
         /* 当前激活的导航按钮 */
@@ -271,12 +286,103 @@
                 font-size: 21px;
             }
         }
+
+        /* ========== 语言选择弹窗 ========== */
+        .lang-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.55);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+
+        .lang-modal {
+            background: #fff;
+            padding: 48px 40px 40px;
+            text-align: center;
+            max-width: 420px;
+            width: 90%;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.25);
+            border-left: 6px solid #003366;
+        }
+
+        .lang-modal p {
+            font-size: 22px;
+            color: #1a1a1a;
+            margin-bottom: 32px;
+            line-height: 1.8;
+            font-weight: 600;
+        }
+
+        .lang-btn-group {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 16px;
+        }
+
+        .lang-btn {
+            min-height: 56px;
+            min-width: 140px;
+            padding: 14px 28px;
+            font-size: 20px;
+            font-weight: 600;
+            background: #2d2d2d;
+            color: #FFFFF0;
+            border: none;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+
+        .lang-btn:hover {
+            background: #003366;
+        }
+
+        .lang-btn:focus-visible {
+            outline: 4px solid #ffcc00;
+            outline-offset: 2px;
+        }
+
+        /* ========== 返回导航按钮 ========== */
+        .back-to-nav {
+            display: block;
+            margin-top: 24px;
+            padding: 10px 20px;
+            font-size: 16px;
+            font-weight: 600;
+            color: #5a5a5a;
+            background: transparent;
+            border: 2px solid #e0dcd4;
+            cursor: pointer;
+            transition: background 0.15s;
+            min-height: 44px;
+        }
+        .back-to-nav:hover {
+            background: rgba(173, 216, 230, 0.4);
+        }
+        .back-to-nav:focus-visible {
+            outline: 4px solid #ffcc00;
+            outline-offset: 2px;
+        }
     </style>
 </head>
 <body>
     <div id="app">
+        <!-- 语言选择弹窗 -->
+        <div v-if="showLangModal" class="lang-overlay" role="dialog" aria-modal="true" aria-label="Language selection">
+            <div class="lang-modal">
+                <p>Please select<br>请选择语言</p>
+                <div class="lang-btn-group">
+                    <button class="lang-btn" @click="setLang('en')">English</button>
+                    <button class="lang-btn" @click="setLang('zh')">中文</button>
+                </div>
+            </div>
+        </div>
+
         <!-- 无障碍跳过链接 -->
-        <a href="#main-content" class="skip-link">Skip to main content</a>
+        <a href="#main-content" class="skip-link">{{ t.skipLink[currentLang] }}</a>
 
         <!-- 头部 + 导航栏 -->
         <header class="app-header">
@@ -286,183 +392,285 @@
                 </div>
                 <h1>XO Tactile Voice Power Bank</h1>
             </div>
-            <nav class="nav-bar" aria-label="Main navigation">
+            <!-- 给 nav 加个 ID 方便定位 -->
+            <nav class="nav-bar" id="main-nav" :aria-label="t.navAria[currentLang]">
                 <button
-                    v-for="item in navItems"
+                    v-for="(item, index) in navItems"
                     :key="item.id"
+                    ref="navBtnRefs"
                     class="nav-btn"
                     :class="{ 'nav-btn--active': activeSection === item.id }"
                     :aria-current="activeSection === item.id ? 'true' : undefined"
-                    :aria-label="'Go to ' + item.label"
+                    :aria-label="t.goTo[currentLang] + item.label"
                     @click="scrollToSection(item.id)"
                 >{{ item.label }}</button>
             </nav>
         </header>
 
         <!-- 主内容区 -->
-        <main class="app-main" id="main-content" aria-label="Main content">
+        <main class="app-main" id="main-content" :aria-label="t.mainAria[currentLang]">
             <!-- 1. 产品概览 -->
             <section id="overview" class="content-section" aria-labelledby="overview-title">
-                <h2 id="overview-title">Product Overview</h2>
-                <div tabindex="0" aria-label="Accessibility-Focused Design, Non-Visual Power Check.">
+                <h2 id="overview-title">{{ t.overview[currentLang] }}</h2>
+                <div tabindex="0" :aria-label="t.subTitle[currentLang]">
                     <div aria-hidden="true">
-                        <p class="subtitle">Accessibility-Focused Design, Non-Visual Power Check</p>
+                        <p class="subtitle">{{ t.subTitle[currentLang] }}</p>
                     </div>
                 </div>
-                <div tabindex="0" aria-label="Front View. The lower front features a tactile brand logo, with the tactile brand name WUJIE above it. The upper right corner contains four LED battery indicators showing the remaining battery level, while a fifth green LED indicates fast charging. The upper left side has a multifunction button for checking battery level and switching operating modes.">
+                <div tabindex="0" :aria-label="t.frontView[currentLang] + '. ' + t.frontVD[currentLang]">
                     <div aria-hidden="true">
-                        <h3>Front View</h3>
-                        <p>The lower front features a tactile brand logo, with the tactile brand name 'WUJIE' above it. The upper-right corner contains four LED battery indicators showing the remaining battery level, while a fifth green LED indicates fast charging. The upper-left side has a multifunction button for checking battery level and switching operating modes.</p>
+                        <h3>{{ t.frontView[currentLang] }}</h3>
+                        <p>{{ t.frontVD[currentLang] }}</p>
                     </div>
                 </div>
-                <div tabindex="0" aria-label="Top View. From left to right: 4-dot tactile battery indicator, speaker, USB-C port, speaker, and USB-A port. Dual speakers provide clear voice announcements, while dual charging ports support multiple devices.">
+                <div tabindex="0" :aria-label="t.topView[currentLang] + '. ' + t.topVD[currentLang]">
                     <div aria-hidden="true">
-                        <h3>Top View</h3>
-                        <p>From left to right: 4-dot tactile battery indicator, speaker, USB-C port, speaker, and USB-A port. Dual speakers provide clear voice announcements, while dual charging ports support multiple devices.</p>
+                        <h3>{{ t.topView[currentLang] }}</h3>
+                        <p>{{ t.topVD[currentLang] }}</p>
                     </div>
                 </div>
-                <div tabindex="0" aria-label="Tactile Battery Indicator. The four tactile dots are the core accessibility feature. By feeling the number of raised dots, users can independently identify the remaining battery level in both quiet and noisy environments.">
+                <div tabindex="0" :aria-label="t.tactileBI[currentLang] + '. ' + t.tactileBD[currentLang]">
                     <div aria-hidden="true">
-                        <h3>Tactile Battery Indicator</h3>
-                        <p>The four tactile dots are the core accessibility feature. By feeling the number of raised dots, users can independently identify the remaining battery level in both quiet and noisy environments.</p>
+                        <h3>{{ t.tactileBI[currentLang] }}</h3>
+                        <p>{{ t.tactileBD[currentLang] }}</p>
                     </div>
                 </div>
+                <button class="back-to-nav" @click="goToNav()">{{ t.backToNav[currentLang] }}</button>
             </section>
 
             <!-- 2. 按键功能 -->
             <section id="buttons" class="content-section" aria-labelledby="buttons-title">
-                <h2 id="buttons-title">Button Functions</h2>
-                <div tabindex="0" aria-label="Button Functions. Single Press: Check battery level. Double Press: Turn voice prompts on or off, also called Silent Mode. Long Press: Switch between Voice Mode, Tactile Mode, and Voice plus Tactile Mode.">
+                <h2 id="buttons-title">{{ t.btnTitle[currentLang] }}</h2>
+                <div tabindex="0" :aria-label="t.btnTitle[currentLang] + '. ' + t.singleP[currentLang] + ': ' + t.singlePD[currentLang] + '. ' + t.doubleP[currentLang] + ': ' + t.doublePD[currentLang] + '. ' + t.longP[currentLang] + ': ' + t.longPD[currentLang]">
                     <div aria-hidden="true">
                         <ul>
-                            <li><strong>Single Press:</strong> Check battery level</li>
-                            <li><strong>Double Press:</strong> Turn voice prompts on/off (Silent Mode)</li>
-                            <li><strong>Long Press:</strong> Switch between Voice Mode, Tactile Mode, and Voice + Tactile Mode</li>
+                            <li><strong>{{ t.singleP[currentLang] }}:</strong> {{ t.singlePD[currentLang] }}</li>
+                            <li><strong>{{ t.doubleP[currentLang] }}:</strong> {{ t.doublePD[currentLang] }}</li>
+                            <li><strong>{{ t.longP[currentLang] }}:</strong> {{ t.longPD[currentLang] }}</li>
                         </ul>
                     </div>
                 </div>
+                <button class="back-to-nav" @click="goToNav()">{{ t.backToNav[currentLang] }}</button>
             </section>
 
             <!-- 3. 电池指示灯 -->
             <section id="led" class="content-section" aria-labelledby="led-title">
-                <h2 id="led-title">Tactile Power Prompt</h2>
-                <div tabindex="0" aria-label="Under dot mode and VoiceOver plus dot dual mode, tap the button to get battery level reminder. 4 dots: 75 to 100 percent power remaining. 3 dots: 50 to 75 percent power remaining. 2 dots: 25 to 50 percent power remaining. 1 dot: 0 to 25 percent power remaining.">
+                <h2 id="led-title">{{ t.pwrPrompt[currentLang] }}</h2>
+                <div tabindex="0" :aria-label="t.pwrPD[currentLang] + ' 4 dots: ' + t.pwr1[currentLang] + '. 3 dots: ' + t.pwr2[currentLang] + '. 2 dots: ' + t.pwr3[currentLang] + '. 1 dot: ' + t.pwr4[currentLang]">
                     <div aria-hidden="true">
-                        <p>Under dot mode and VoiceOver + dot dual mode, tap the button to get battery level reminder:</p>
+                        <p>{{ t.pwrPD[currentLang] }}</p>
                         <ul>
-                            <li><strong>4 dots:</strong> 75–100% power remaining</li>
-                            <li><strong>3 dots:</strong> 50–75% power remaining</li>
-                            <li><strong>2 dots:</strong> 25–50% power remaining</li>
-                            <li><strong>1 dot:</strong> 0–25% power remaining</li>
+                            <li><strong>4 dots:</strong> {{ t.pwr1[currentLang] }}</li>
+                            <li><strong>3 dots:</strong> {{ t.pwr2[currentLang] }}</li>
+                            <li><strong>2 dots:</strong> {{ t.pwr3[currentLang] }}</li>
+                            <li><strong>1 dot:</strong> {{ t.pwr4[currentLang] }}</li>
                         </ul>
                     </div>
                 </div>
+                <button class="back-to-nav" @click="goToNav()">{{ t.backToNav[currentLang] }}</button>
             </section>
 
             <!-- 4. 语音提示 -->
             <section id="voice" class="content-section" aria-labelledby="voice-title">
-                <h2 id="voice-title">Voice Prompts</h2>
-                <div tabindex="0" aria-label="Voice Prompts list. Start charge. Start discharge. Battery Full. Battery Low. Please charge. Remaining Battery Percentage.">
+                <h2 id="voice-title">{{ t.vpTitle[currentLang] }}</h2>
+                <div tabindex="0" :aria-label="t.vpTitle[currentLang] + ': ' + t.vp1[currentLang] + '. ' + t.vp2[currentLang] + '. ' + t.vp3[currentLang] + '. ' + t.vp4[currentLang] + '. ' + t.vp5[currentLang] + '. ' + t.vp6[currentLang]">
                     <div aria-hidden="true">
                         <ul>
-                            <li>Start charge</li>
-                            <li>Start discharge</li>
-                            <li>Battery Full</li>
-                            <li>Battery Low</li>
-                            <li>Please charge</li>
-                            <li>Remaining Battery Percentage</li>
+                            <li>{{ t.vp1[currentLang] }}</li>
+                            <li>{{ t.vp2[currentLang] }}</li>
+                            <li>{{ t.vp3[currentLang] }}</li>
+                            <li>{{ t.vp4[currentLang] }}</li>
+                            <li>{{ t.vp5[currentLang] }}</li>
+                            <li>{{ t.vp6[currentLang] }}</li>
                         </ul>
                     </div>
                 </div>
+                <button class="back-to-nav" @click="goToNav()">{{ t.backToNav[currentLang] }}</button>
             </section>
 
             <!-- 5. 产品规格 -->
             <section id="specs" class="content-section" aria-labelledby="specs-title">
-                <h2 id="specs-title">Product Specifications</h2>
-                <div tabindex="0" aria-label="Product Specifications. Battery Capacity: 10,000 milliamp hours. Maximum Fast Charging Output: 22.5 Watts. USB-C Port: Support Input and Output. USB-A Port: Support Output Only. Product Dimensions: 145 by 73 by 16 millimeters. Net Weight: 208 grams.">
+                <h2 id="specs-title">{{ t.spTitle[currentLang] }}</h2>
+                <div tabindex="0" :aria-label="t.spTitle[currentLang] + '. ' + t.sp1[currentLang] + ': ' + t.sp1v[currentLang] + '. ' + t.sp2[currentLang] + ': ' + t.sp2v[currentLang] + '. ' + t.sp3[currentLang] + ': ' + t.sp3v[currentLang] + '. ' + t.sp4[currentLang] + ': ' + t.sp4v[currentLang] + '. ' + t.sp5[currentLang] + ': ' + t.sp5v[currentLang] + '. ' + t.sp6[currentLang] + ': ' + t.sp6v[currentLang]">
                     <div aria-hidden="true">
                         <ul>
-                            <li><strong>Battery Capacity:</strong> 10,000mAh</li>
-                            <li><strong>Maximum Fast Charging Output:</strong> 22.5W</li>
-                            <li><strong>USB-C Port:</strong> Support Input &amp; Output</li>
-                            <li><strong>USB-A Port:</strong> Support Output Only</li>
-                            <li><strong>Product Dimensions:</strong> 145 × 73 × 16 mm</li>
-                            <li><strong>Net Weight:</strong> 208 g</li>
+                            <li><strong>{{ t.sp1[currentLang] }}:</strong> {{ t.sp1v[currentLang] }}</li>
+                            <li><strong>{{ t.sp2[currentLang] }}:</strong> {{ t.sp2v[currentLang] }}</li>
+                            <li><strong>{{ t.sp3[currentLang] }}:</strong> {{ t.sp3v[currentLang] }}</li>
+                            <li><strong>{{ t.sp4[currentLang] }}:</strong> {{ t.sp4v[currentLang] }}</li>
+                            <li><strong>{{ t.sp5[currentLang] }}:</strong> {{ t.sp5v[currentLang] }}</li>
+                            <li><strong>{{ t.sp6[currentLang] }}:</strong> {{ t.sp6v[currentLang] }}</li>
                         </ul>
                     </div>
                 </div>
+                <button class="back-to-nav" @click="goToNav()">{{ t.backToNav[currentLang] }}</button>
             </section>
 
             <!-- 6. 常见问题 -->
             <section id="faq" class="content-section" aria-labelledby="faq-title">
-                <h2 id="faq-title">Frequently Asked Questions</h2>
-                <div tabindex="0" aria-label="Question: Why doesn't it speak? Answer: Double press the button to enable voice prompts.">
+                <h2 id="faq-title">{{ t.fqTitle[currentLang] }}</h2>
+                <div tabindex="0" :aria-label="t.fqQ1[currentLang] + ' ' + t.fqA1[currentLang]">
                     <div aria-hidden="true">
-                        <p><strong>Why doesn't it speak?</strong></p>
-                        <p>Double press the button to enable voice prompts.</p>
+                        <p><strong>{{ t.fqQ1[currentLang] }}</strong></p>
+                        <p>{{ t.fqA1[currentLang] }}</p>
                     </div>
                 </div>
-                <div tabindex="0" aria-label="Question: Can I charge multiple devices? Answer: Yes.">
+                <div tabindex="0" :aria-label="t.fqQ2[currentLang] + ' ' + t.fqA2[currentLang]">
                     <div aria-hidden="true">
-                        <p><strong>Can I charge multiple devices?</strong></p>
-                        <p>Yes.</p>
+                        <p><strong>{{ t.fqQ2[currentLang] }}</strong></p>
+                        <p>{{ t.fqA2[currentLang] }}</p>
                     </div>
                 </div>
+                <button class="back-to-nav" @click="goToNav()">{{ t.backToNav[currentLang] }}</button>
             </section>
 
             <!-- 7. 我们期待您的反馈 -->
             <section id="feedback" class="content-section" aria-labelledby="feedback-title">
-                <h2 id="feedback-title">We'd Love Your Feedback</h2>
-                <div tabindex="0" aria-label="We'd Love Your Feedback. Please share your feedback on the packaging, tactile design, voice prompts, and overall experience.">
+                <h2 id="feedback-title">{{ t.fbTitle[currentLang] }}</h2>
+                <div tabindex="0" :aria-label="t.fbTitle[currentLang] + '. ' + t.fbD[currentLang]">
                     <div aria-hidden="true">
-                        <p>Please share your feedback on the packaging, tactile design, voice prompts, and overall experience.</p>
+                        <p>{{ t.fbD[currentLang] }}</p>
                     </div>
                 </div>
+                <button class="back-to-nav" @click="goToNav()">{{ t.backToNav[currentLang] }}</button>
             </section>
         </main>
 
         <!-- 联系我们页脚（全宽） -->
         <footer class="contact-footer" id="contact" aria-labelledby="contact-title">
-            <h2 id="contact-title">Contact Us</h2>
-            <div tabindex="0" aria-label="Contact Us. Website: https://s.wujieqh.com/. Email: support@wujieqh.com. WhatsApp: plus 1 610 781 6556. Thank you for choosing XO. Copyright 2026 Chongqing Infinite Horizons Co., Ltd.">
+            <h2 id="contact-title">{{ t.ctTitle[currentLang] }}</h2>
+            <div tabindex="0" :aria-label="t.ctTitle[currentLang] + '. ' + t.ctWeb[currentLang] + ': https://s.wujieqh.com/. ' + t.ctEmail[currentLang] + ': support@wujieqh.com. ' + t.ctWA[currentLang] + ': +1 610 781 6556. ' + t.ctThanks[currentLang] + ' ' + t.ctCopy[currentLang]">
                 <div aria-hidden="true">
-                    <p><strong>Website:</strong> https://s.wujieqh.com/</p>
-                    <p><strong>Email:</strong> support@wujieqh.com</p>
-                    <p><strong>WhatsApp:</strong> +1 610 781 6556</p>
+                    <p><strong>{{ t.ctWeb[currentLang] }}:</strong> https://s.wujieqh.com/</p>
+                    <p><strong>{{ t.ctEmail[currentLang] }}:</strong> support@wujieqh.com</p>
+                    <p><strong>{{ t.ctWA[currentLang] }}:</strong> +1 610 781 6556</p>
                     <br>
-                    <p>Thank you for choosing XO.</p>
-                    <p>&copy; 2026 Chongqing Infinite Horizons Co., Ltd.</p>
+                    <p>{{ t.ctThanks[currentLang] }}</p>
+                    <p>{{ t.ctCopy[currentLang] }}</p>
                 </div>
             </div>
         </footer>
     </div>
 
     <script>
-        const { createApp, ref, onMounted, onUnmounted } = Vue;
+        const { createApp, ref, computed, onMounted, onUnmounted, nextTick } = Vue;
 
         createApp({
             setup() {
-                const navItems = [
-                    { id: 'overview',  label: 'Product Overview' },
-                    { id: 'buttons',   label: 'Button Functions' },
-                    { id: 'led',       label: 'Battery Indicator' },
-                    { id: 'voice',     label: 'Voice Prompts' },
-                    { id: 'specs',     label: 'Specifications' },
-                    { id: 'faq',       label: 'FAQ' },
-                    { id: 'feedback',  label: 'Feedback' },
-                    { id: 'contact',   label: 'Contact Us' },
-                ];
+                const showLangModal = ref(true);
+                const currentLang = ref('en');
+                // 用于存储导航按钮的引用
+                const navBtnRefs = ref([]);
+
+                function setLang(lang) {
+                    currentLang.value = lang;
+                    showLangModal.value = false;
+                }
+
+                // ESC 关闭弹窗
+                function onKeydown(e) {
+                    if (e.key === 'Escape' && showLangModal.value) {
+                        showLangModal.value = false;
+                    }
+                }
+
+                // 双语翻译数据
+                const t = {
+                    skipLink:             { en: 'Skip to main content',            zh: '跳到主要内容' },
+                    navAria:              { en: 'Main navigation',                 zh: '主导航' },
+                    mainAria:             { en: 'Main content',                    zh: '主要内容' },
+                    goTo:                 { en: 'Go to ',                          zh: '跳转到' },
+                    overview:             { en: 'Product Overview',                zh: '产品概览' },
+                    buttons:              { en: 'Button Functions',                zh: '按键功能' },
+                    led:                  { en: 'Battery Indicator',               zh: '电池指示灯' },
+                    voice:                { en: 'Voice Prompts',                   zh: '语音提示' },
+                    specs:                { en: 'Specifications',                  zh: '产品规格' },
+                    faq:                  { en: 'FAQ',                             zh: '常见问题' },
+                    feedback:             { en: 'Feedback',                        zh: '我们期待您的反馈' },
+                    contact:              { en: 'Contact Us',                      zh: '联系我们' },
+                    // --- 内容翻译 ---
+                    subTitle:  { en: 'Accessibility-Focused Design, Non-Visual Power Check', zh: '无障碍设计，非视觉电量检查' },
+                    frontView: { en: 'Front View', zh: '正面视图' },
+                    frontVD:   { en: 'The lower front features a tactile brand logo, with the tactile brand name \'WUJIE\' above it. The upper-right corner contains four LED battery indicators showing the remaining battery level, while a fifth green LED indicates fast charging. The upper-left side has a multifunction button for checking battery level and switching operating modes.',
+                                 zh: '正面下方有触感品牌标志，上方有触感品牌名称"WUJIE"。右上角有四个LED电量指示灯显示剩余电量，第五个绿色LED指示快充状态。左上侧有一个多功能按钮，用于检查电量和切换工作模式。' },
+                    topView:   { en: 'Top View', zh: '顶部视图' },
+                    topVD:     { en: 'From left to right: 4-dot tactile battery indicator, speaker, USB-C port, speaker, and USB-A port. Dual speakers provide clear voice announcements, while dual charging ports support multiple devices.',
+                                 zh: '从左到右：四点触感电量指示器、扬声器、USB-C接口、扬声器、USB-A接口。双扬声器提供清晰的语音播报，双充电口支持多设备同时充电。' },
+                    tactileBI: { en: 'Tactile Battery Indicator', zh: '触感电量指示器' },
+                    tactileBD: { en: 'The four tactile dots are the core accessibility feature. By feeling the number of raised dots, users can independently identify the remaining battery level in both quiet and noisy environments.',
+                                 zh: '四个触感凸点是核心无障碍功能。通过触摸凸点数量，用户可以在安静或嘈杂环境中独立识别剩余电量。' },
+                    btnTitle:  { en: 'Button Functions', zh: '按键功能' },
+                    singleP:   { en: 'Single Press', zh: '单击' },
+                    singlePD:  { en: 'Check battery level', zh: '检查电池电量' },
+                    doubleP:   { en: 'Double Press', zh: '双击' },
+                    doublePD:  { en: 'Turn voice prompts on/off (Silent Mode)', zh: '开启/关闭语音提示（静音模式）' },
+                    longP:     { en: 'Long Press', zh: '长按' },
+                    longPD:    { en: 'Switch between Voice Mode, Tactile Mode, and Voice + Tactile Mode', zh: '切换语音模式、触感模式和语音+触感模式' },
+                    backToNav: { en: '\u2191 Back to navigation', zh: '\u2191 返回导航' },
+                    pwrPrompt: { en: 'Tactile Power Prompt', zh: '触感电量提示' },
+                    pwrPD:     { en: 'Under dot mode and VoiceOver + dot dual mode, tap the button to get battery level reminder:', zh: '在触感点模式和语音+触感点双模式下，轻按按钮可获取电量提醒：' },
+                    pwr1:      { en: '75–100% power remaining', zh: '75–100% 剩余电量' },
+                    pwr2:      { en: '50–75% power remaining',  zh: '50–75% 剩余电量' },
+                    pwr3:      { en: '25–50% power remaining',  zh: '25–50% 剩余电量' },
+                    pwr4:      { en: '0–25% power remaining',   zh: '0–25% 剩余电量' },
+                    vpTitle:   { en: 'Voice Prompts', zh: '语音提示' },
+                    vp1:       { en: 'Start charge', zh: '开始充电' },
+                    vp2:       { en: 'Start discharge', zh: '开始放电' },
+                    vp3:       { en: 'Battery Full', zh: '电量已满' },
+                    vp4:       { en: 'Battery Low', zh: '电量低' },
+                    vp5:       { en: 'Please charge', zh: '请充电' },
+                    vp6:       { en: 'Remaining Battery Percentage', zh: '剩余电量百分比' },
+                    spTitle:   { en: 'Product Specifications', zh: '产品规格' },
+                    sp1:       { en: 'Battery Capacity', zh: '电池容量' },
+                    sp1v:      { en: '10,000mAh', zh: '10000毫安时' },
+                    sp2:       { en: 'Maximum Fast Charging Output', zh: '最大快充输出' },
+                    sp2v:      { en: '22.5W', zh: '22.5瓦' },
+                    sp3:       { en: 'USB-C Port', zh: 'USB-C 接口' },
+                    sp3v:      { en: 'Support Input & Output', zh: '支持输入和输出' },
+                    sp4:       { en: 'USB-A Port', zh: 'USB-A 接口' },
+                    sp4v:      { en: 'Support Output Only', zh: '仅支持输出' },
+                    sp5:       { en: 'Product Dimensions', zh: '产品尺寸' },
+                    sp5v:      { en: '145 × 73 × 16 mm', zh: '145 × 73 × 16 毫米' },
+                    sp6:       { en: 'Net Weight', zh: '净重' },
+                    sp6v:      { en: '208 g', zh: '208 克' },
+                    fqTitle:   { en: 'Frequently Asked Questions', zh: '常见问题' },
+                    fqQ1:      { en: 'Why doesn\'t it speak?', zh: '为什么没有语音？' },
+                    fqA1:      { en: 'Double press the button to enable voice prompts.', zh: '双击按钮启用语音提示。' },
+                    fqQ2:      { en: 'Can I charge multiple devices?', zh: '可以同时充多个设备吗？' },
+                    fqA2:      { en: 'Yes.', zh: '可以。' },
+                    fbTitle:   { en: 'We\'d Love Your Feedback', zh: '我们期待您的反馈' },
+                    fbD:       { en: 'Please share your feedback on the packaging, tactile design, voice prompts, and overall experience.', zh: '请分享您对包装、触感设计、语音提示和整体体验的反馈意见。' },
+                    ctTitle:   { en: 'Contact Us', zh: '联系我们' },
+                    ctWeb:     { en: 'Website', zh: '官方网站' },
+                    ctEmail:   { en: 'Email', zh: '电子邮箱' },
+                    ctWA:      { en: 'WhatsApp', zh: 'WhatsApp' },
+                    ctThanks:  { en: 'Thank you for choosing XO.', zh: '感谢您选择 XO。' },
+                    ctCopy:    { en: '\u00a9 2026 Chongqing Infinite Horizons Co., Ltd.', zh: '\u00a9 2026 重庆无极量子科技有限公司' },
+                };
+
+                const navItems = computed(() => [
+                    { id: 'overview',  label: t.overview[currentLang.value] },
+                    { id: 'buttons',   label: t.buttons[currentLang.value] },
+                    { id: 'led',       label: t.led[currentLang.value] },
+                    { id: 'voice',     label: t.voice[currentLang.value] },
+                    { id: 'specs',     label: t.specs[currentLang.value] },
+                    { id: 'faq',       label: t.faq[currentLang.value] },
+                    { id: 'feedback',  label: t.feedback[currentLang.value] },
+                    { id: 'contact',   label: t.contact[currentLang.value] },
+                ]);
 
                 const activeSection = ref('overview');
+
+                // 滚动监听变量
+                let scrollTimer = null;
+                let scrollLock = false;
 
                 function scrollToSection(id) {
                     activeSection.value = id;
                     const el = document.getElementById(id);
                     if (el) {
-                        // 锁定滚动检测，防止 smooth 滚动期间自动修正
                         scrollLock = true;
                         el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                        // 滚动动画约 500ms 后解锁
                         setTimeout(() => { scrollLock = false; }, 600);
                         const heading = el.querySelector('h2');
                         if (heading) {
@@ -472,11 +680,44 @@
                     }
                 }
 
-                // 滚动监听：动态读取 header 高度作为阈值，修正定位偏差
-                let scrollTimer = null;
-                let scrollLock = false;
+                // 【修复点2 & 3】优化返回导航逻辑
+                function goToNav() {
+                    const navBar = document.getElementById('main-nav');
+                    if (!navBar) return;
+
+                    // 1. 获取第一个按钮的 DOM 元素
+                    // 使用 navBtnRefs 或者直接 querySelector
+                    const firstBtn = navBtnRefs.value[0] || document.querySelector('.nav-btn');
+                    
+                    if (firstBtn) {
+                        scrollLock = true;
+                        
+                        // 2. 计算滚动位置：Header高度 + 额外间距 (例如 20px)，避免贴顶
+                        const headerHeight = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--header-height')) || 120;
+                        const navRect = navBar.getBoundingClientRect();
+                        const targetY = window.scrollY + navRect.top - headerHeight - 20; 
+
+                        window.scrollTo({
+                            top: targetY,
+                            behavior: 'smooth'
+                        });
+
+                        // 3. 等待滚动完成后聚焦
+                        setTimeout(() => {
+                            // 再次尝试获取焦点，确保元素存在
+                            const btn = navBtnRefs.value[0] || document.querySelector('.nav-btn');
+                            if (btn) {
+                                btn.focus();
+                                // 可选：朗读提示（如果浏览器支持且需要）
+                                // btn.setAttribute('aria-live', 'polite'); 
+                            }
+                            scrollLock = false;
+                        }, 500); // 稍微延长一点时间确保滚动平滑结束
+                    }
+                }
+
+                // 滚动监听
                 function onScroll() {
-                    // 程序化滚动期间跳过自动检测，避免覆盖用户点击
                     if (scrollLock) return;
                     if (scrollTimer) return;
                     scrollTimer = setTimeout(() => {
@@ -484,33 +725,38 @@
                         const headerH = parseFloat(
                             getComputedStyle(document.documentElement).getPropertyValue('--header-height')
                         ) || 120;
-                        let current = navItems[0].id;
-                        for (const item of navItems) {
+                        let current = navItems.value[0].id;
+                        for (const item of navItems.value) {
                             const el = document.getElementById(item.id);
                             if (!el) continue;
                             const rect = el.getBoundingClientRect();
-                            // section 顶部到达 header 底部时即为当前栏目
                             if (rect.top <= headerH + 10) {
                                 current = item.id;
                             }
                         }
-                        // 如果已滚动到页面底部，强制高亮最后一个栏目（联系我们页脚）
                         const scrollBottom = window.scrollY + window.innerHeight;
                         const pageBottom = document.documentElement.scrollHeight;
                         if (pageBottom - scrollBottom <= 2) {
-                            current = navItems[navItems.length - 1].id;
+                            current = navItems.value[navItems.value.length - 1].id;
                         }
                         activeSection.value = current;
                     }, 80);
                 }
 
-                // ResizeObserver：动态测量 header 高度，写入 CSS 变量
                 let headerObserver = null;
 
                 onMounted(() => {
+                    window.addEventListener('keydown', onKeydown);
                     window.addEventListener('scroll', onScroll, { passive: true });
 
-                    // 动态对齐 logo 与第一个导航按钮
+                    if (showLangModal.value) {
+                        nextTick(() => {
+                            const firstBtn = document.querySelector('.lang-btn');
+                            firstBtn?.focus();
+                        });
+                    }
+
+                    // 动态对齐 logo
                     const logoWrap = document.querySelector('.header-logo-wrap');
                     const firstBtn = document.querySelector('.nav-btn');
                     const headerTop = document.querySelector('.header-top');
@@ -518,14 +764,12 @@
 
                     function alignLogo() {
                         if (!logoWrap || !firstBtn || !headerTop) return;
-                        // 小屏时 position:static，无需对齐
                         if (window.innerWidth <= 768) {
                             logoWrap.style.left = '';
                             return;
                         }
                         const btnRect = firstBtn.getBoundingClientRect();
                         const topRect = headerTop.getBoundingClientRect();
-                        // logo left = 第一个按钮左边缘 - header-top 左边缘
                         logoWrap.style.left = (btnRect.left - topRect.left) + 'px';
                     }
 
@@ -545,6 +789,7 @@
                     }
                 });
                 onUnmounted(() => {
+                    window.removeEventListener('keydown', onKeydown);
                     window.removeEventListener('scroll', onScroll);
                     if (headerObserver) {
                         headerObserver.disconnect();
@@ -552,7 +797,7 @@
                     }
                 });
 
-                return { navItems, activeSection, scrollToSection };
+                return { navItems, activeSection, scrollToSection, goToNav, showLangModal, currentLang, setLang, t, navBtnRefs };
             }
         }).mount('#app');
     </script>
