@@ -93,11 +93,10 @@
         /* ========== 导航栏：大容器装8个按钮 ========== */
         .nav-bar {
             display: flex;
-            flex-wrap: nowrap;
+            flex-wrap: wrap;
             justify-content: center;
             gap: 10px;
             margin: 0 auto;
-            /* 增加一点内边距，防止焦点框被切掉 */
             padding: 4px; 
         }
 
@@ -144,6 +143,22 @@
             color: #1a1a1a;
             border: 6px solid #003366;
             font-weight: 700;
+        }
+
+        /* 导航栏内的语言切换按钮 */
+        .lang-toggle-btn {
+            background: #003366;
+            color: #FFFFF0;
+            border: 3px solid #003366;
+        }
+        .lang-toggle-btn:hover {
+            background: #004080;
+            border-color: #004080;
+        }
+        .lang-toggle-btn:focus-visible {
+            outline: 4px solid #ffcc00;
+            outline-offset: 2px;
+            background: #003366;
         }
 
         /* ========== 主内容区 ========== */
@@ -239,12 +254,11 @@
             color: #ccc;
         }
 
-        /* ========== 响应式：导航栏折行 ========== */
-        @media (max-width: 1120px) {
-            .nav-bar {
-                flex-wrap: wrap;
-            }
+        .contact-footer a {
+            color: #fff;
+            text-decoration: underline;
         }
+
 
         /* ========== 响应式：logo 移至标题下方 ========== */
         @media (max-width: 768px) {
@@ -366,6 +380,149 @@
             outline: 4px solid #ffcc00;
             outline-offset: 2px;
         }
+
+        /* ========== 移动端折叠导航按钮 ========== */
+        .nav-toggle-btn {
+            display: none; /* 桌面端隐藏 */
+            width: 100%;
+            min-height: 52px;
+            padding: 10px 16px;
+            font-size: 18px;
+            font-weight: 600;
+            color: #FFFFF0;
+            background: #2d2d2d;
+            border: 2px solid #555;
+            cursor: pointer;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            transition: background 0.15s;
+            text-align: center;
+            letter-spacing: 1px;
+        }
+        .nav-toggle-btn:hover {
+            background: #3a3a3a;
+        }
+        .nav-toggle-btn:focus-visible {
+            outline: 4px solid #ffcc00;
+            outline-offset: 2px;
+        }
+        .nav-toggle-btn:active {
+            transform: scale(0.98);
+        }
+        .nav-toggle-btn .arrow-icon {
+            display: inline-block;
+            transition: transform 0.3s ease;
+            margin-left: 6px;
+        }
+        .nav-toggle-btn .arrow-icon--open {
+            transform: rotate(180deg);
+        }
+
+        /* ========== 移动端响应式（≤600px 折叠导航） ========== */
+        @media (max-width: 600px) {
+            /* 显示折叠按钮 */
+            .nav-toggle-btn {
+                display: block;
+            }
+            /* 导航栏默认隐藏 */
+            .nav-bar {
+                flex-direction: column;
+                align-items: stretch;
+                max-height: 0;
+                overflow: hidden;
+                opacity: 0;
+                transition: max-height 0.4s ease, opacity 0.3s ease, padding 0.3s ease;
+                padding: 0 4px;
+                gap: 0;
+            }
+            /* 展开状态 */
+            .nav-bar--open {
+                max-height: 600px;
+                opacity: 1;
+                padding: 10px 4px 6px;
+                gap: 8px;
+            }
+            .nav-bar--open .nav-btn {
+                width: 100%;
+                min-width: 0;
+            }
+            .nav-btn {
+                min-height: 48px;
+                width: 100%;
+                padding: 10px 14px;
+                font-size: 16px;
+                white-space: normal;
+                word-break: break-word;
+            }
+            .lang-toggle-btn {
+                width: 100%;
+            }
+        }
+
+        /* ========== 极小屏（≤380px，如 iPhone SE） ========== */
+        @media (max-width: 380px) {
+            html {
+                font-size: 14px;
+            }
+            .app-header {
+                padding: 10px 10px 12px;
+            }
+            .header-top h1 {
+                font-size: 18px;
+                letter-spacing: 1px;
+            }
+            .header-logo-wrap img {
+                height: 32px;
+            }
+            .nav-toggle-btn {
+                font-size: 16px;
+                min-height: 44px;
+                padding: 8px 12px;
+            }
+            .nav-btn {
+                font-size: 14px;
+                min-height: 42px;
+                padding: 8px 10px;
+            }
+            .content-section {
+                padding: 16px 12px;
+                min-height: 260px;
+            }
+            .content-section h2 {
+                font-size: 18px;
+            }
+            .content-section h3 {
+                font-size: 17px;
+            }
+            .content-section p,
+            .content-section li {
+                font-size: 15px;
+            }
+            .lang-modal {
+                padding: 32px 24px 28px;
+            }
+            .lang-modal p {
+                font-size: 18px;
+            }
+            .lang-btn {
+                min-height: 48px;
+                min-width: 110px;
+                font-size: 17px;
+                padding: 10px 20px;
+            }
+            .back-to-nav {
+                font-size: 14px;
+                padding: 8px 14px;
+                min-height: 38px;
+            }
+            .contact-footer {
+                padding: 28px 16px;
+                font-size: 15px;
+            }
+            .contact-footer h2 {
+                font-size: 20px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -392,8 +549,22 @@
                 </div>
                 <h1>XO Tactile Voice Power Bank</h1>
             </div>
+            <!-- 移动端折叠导航按钮 -->
+            <button
+                class="nav-toggle-btn"
+                :class="{ 'nav-toggle-btn--open': mobileNavOpen }"
+                @click="toggleMobileNav"
+                :aria-label="mobileNavOpen ? (currentLang === 'zh' ? '收起导航菜单' : 'Close navigation menu') : (currentLang === 'zh' ? '展开导航菜单' : 'Open navigation menu')"
+                :aria-expanded="mobileNavOpen"
+                aria-controls="main-nav"
+            ><span aria-hidden="true">{{ mobileNavOpen ? '✕' : '☰' }}</span>
+                {{ mobileNavOpen ? (currentLang === 'zh' ? '关闭菜单' : 'Close') : (currentLang === 'zh' ? '菜单' : 'Menu') }}
+            </button>
+
             <!-- 给 nav 加个 ID 方便定位 -->
-            <nav class="nav-bar" id="main-nav" :aria-label="t.navAria[currentLang]">
+            <nav class="nav-bar" id="main-nav"
+                 :class="{ 'nav-bar--open': mobileNavOpen }"
+                 :aria-label="t.navAria[currentLang]">
                 <button
                     v-for="(item, index) in navItems"
                     :key="item.id"
@@ -402,8 +573,15 @@
                     :class="{ 'nav-btn--active': activeSection === item.id }"
                     :aria-current="activeSection === item.id ? 'true' : undefined"
                     :aria-label="t.goTo[currentLang] + item.label"
-                    @click="scrollToSection(item.id)"
+                    @click="onNavClick(item.id)"
                 >{{ item.label }}</button>
+
+                    <!-- 快速语言切换按钮 -->
+                    <button
+                        class="nav-btn lang-toggle-btn"
+                        @click="toggleLang"
+                        :aria-label="'Switch Language / 切换语言'"
+                    >English / 中文</button>
             </nav>
         </header>
 
@@ -435,7 +613,7 @@
                         <p>{{ t.tactileBD[currentLang] }}</p>
                     </div>
                 </div>
-                <button class="back-to-nav" @click="goToNav()">{{ t.backToNav[currentLang] }}</button>
+                <button class="back-to-nav" @click="goToNav('overview')">{{ t.backToNav[currentLang] }}</button>
             </section>
 
             <!-- 2. 按键功能 -->
@@ -450,7 +628,7 @@
                         </ul>
                     </div>
                 </div>
-                <button class="back-to-nav" @click="goToNav()">{{ t.backToNav[currentLang] }}</button>
+                <button class="back-to-nav" @click="goToNav('buttons')">{{ t.backToNav[currentLang] }}</button>
             </section>
 
             <!-- 3. 电池指示灯 -->
@@ -467,7 +645,7 @@
                         </ul>
                     </div>
                 </div>
-                <button class="back-to-nav" @click="goToNav()">{{ t.backToNav[currentLang] }}</button>
+                <button class="back-to-nav" @click="goToNav('led')">{{ t.backToNav[currentLang] }}</button>
             </section>
 
             <!-- 4. 语音提示 -->
@@ -485,7 +663,7 @@
                         </ul>
                     </div>
                 </div>
-                <button class="back-to-nav" @click="goToNav()">{{ t.backToNav[currentLang] }}</button>
+                <button class="back-to-nav" @click="goToNav('voice')">{{ t.backToNav[currentLang] }}</button>
             </section>
 
             <!-- 5. 产品规格 -->
@@ -503,7 +681,7 @@
                         </ul>
                     </div>
                 </div>
-                <button class="back-to-nav" @click="goToNav()">{{ t.backToNav[currentLang] }}</button>
+                <button class="back-to-nav" @click="goToNav('specs')">{{ t.backToNav[currentLang] }}</button>
             </section>
 
             <!-- 6. 常见问题 -->
@@ -521,18 +699,74 @@
                         <p>{{ t.fqA2[currentLang] }}</p>
                     </div>
                 </div>
-                <button class="back-to-nav" @click="goToNav()">{{ t.backToNav[currentLang] }}</button>
+                <button class="back-to-nav" @click="goToNav('faq')">{{ t.backToNav[currentLang] }}</button>
             </section>
 
-            <!-- 7. 我们期待您的反馈 -->
+            <!-- 7. 我们期待您的反馈 (已修改为表单) -->
             <section id="feedback" class="content-section" aria-labelledby="feedback-title">
                 <h2 id="feedback-title">{{ t.fbTitle[currentLang] }}</h2>
-                <div tabindex="0" :aria-label="t.fbTitle[currentLang] + '. ' + t.fbD[currentLang]">
-                    <div aria-hidden="true">
-                        <p>{{ t.fbD[currentLang] }}</p>
+                
+                <!-- 表单区域：增加无障碍标签关联 -->
+                <form @submit.prevent="sendFeedback" style="margin-top: 20px;">
+                    <div style="margin-bottom: 16px;">
+                        <label for="fb-name" style="display:block; font-size:18px; font-weight:600; margin-bottom:6px; color:#333;">
+                            {{ currentLang === 'zh' ? '您的称呼' : 'Your Name' }}
+                        </label>
+                        <input 
+                            type="text" 
+                            id="fb-name" 
+                            v-model="feedbackForm.name" 
+                            :placeholder="currentLang === 'zh' ? '请输入您的姓名或昵称' : 'Enter your name or nickname'"
+                            style="width:100%; padding:12px 16px; font-size:18px; border:2px solid #e0dcd4; border-radius:4px; outline:none;"
+                            @focus="$event.target.style.borderColor='#003366'"
+                            @blur="$event.target.style.borderColor='#e0dcd4'"
+                        >
                     </div>
-                </div>
-                <button class="back-to-nav" @click="goToNav()">{{ t.backToNav[currentLang] }}</button>
+
+                    <div style="margin-bottom: 16px;">
+                        <label for="fb-email" style="display:block; font-size:18px; font-weight:600; margin-bottom:6px; color:#333;">
+                            {{ currentLang === 'zh' ? '电子邮箱' : 'Email Address' }}
+                        </label>
+                        <input 
+                            type="email" 
+                            id="fb-email" 
+                            v-model="feedbackForm.email" 
+                            :placeholder="currentLang === 'zh' ? 'example@mail.com' : 'example@mail.com'"
+                            style="width:100%; padding:12px 16px; font-size:18px; border:2px solid #e0dcd4; border-radius:4px; outline:none;"
+                            @focus="$event.target.style.borderColor='#003366'"
+                            @blur="$event.target.style.borderColor='#e0dcd4'"
+                        >
+                    </div>
+
+                    <div style="margin-bottom: 24px;">
+                        <label for="fb-message" style="display:block; font-size:18px; font-weight:600; margin-bottom:6px; color:#333;">
+                            {{ currentLang === 'zh' ? '留言内容' : 'Your Message' }}
+                        </label>
+                        <textarea 
+                            id="fb-message" 
+                            v-model="feedbackForm.message" 
+                            rows="5"
+                            :placeholder="t.fbD[currentLang]"
+                            style="width:100%; padding:12px 16px; font-size:18px; border:2px solid #e0dcd4; border-radius:4px; outline:none; resize:vertical; line-height:1.6;"
+                            @focus="$event.target.style.borderColor='#003366'"
+                            @blur="$event.target.style.borderColor='#e0dcd4'"
+                        ></textarea>
+                    </div>
+
+                    <button 
+                        type="submit" 
+                        class="nav-btn" 
+                        style="min-width:200px; background:#003366; color:#FFFFF0; border-color:#003366;"
+                    >
+                        {{ currentLang === 'zh' ? '发送留言' : 'Send Feedback' }}
+                    </button>
+                    
+                    <p v-if="feedbackSent" style="margin-top:12px; color:green; font-weight:600; font-size:16px;" role="status">
+                        {{ currentLang === 'zh' ? '✓ 已唤起邮件客户端，请确认发送' : '✓ Email client opened, please confirm to send' }}
+                    </p>
+                </form>
+
+                <button class="back-to-nav" @click="goToNav('feedback')">{{ t.backToNav[currentLang] }}</button>
             </section>
         </main>
 
@@ -541,8 +775,8 @@
             <h2 id="contact-title">{{ t.ctTitle[currentLang] }}</h2>
             <div tabindex="0" :aria-label="t.ctTitle[currentLang] + '. ' + t.ctWeb[currentLang] + ': https://s.wujieqh.com/. ' + t.ctEmail[currentLang] + ': support@wujieqh.com. ' + t.ctWA[currentLang] + ': +1 610 781 6556. ' + t.ctThanks[currentLang] + ' ' + t.ctCopy[currentLang]">
                 <div aria-hidden="true">
-                    <p><strong>{{ t.ctWeb[currentLang] }}:</strong> https://s.wujieqh.com/</p>
-                    <p><strong>{{ t.ctEmail[currentLang] }}:</strong> support@wujieqh.com</p>
+                    <p><strong>{{ t.ctWeb[currentLang] }}:</strong> <a href="https://s.wujieqh.com/" target="_blank" rel="noopener noreferrer">https://s.wujieqh.com/</a></p>
+                    <p><strong>{{ t.ctEmail[currentLang] }}:</strong> <a href="mailto:support@wujieqh.com">support@wujieqh.com</a></p>
                     <p><strong>{{ t.ctWA[currentLang] }}:</strong> +1 610 781 6556</p>
                     <br>
                     <p>{{ t.ctThanks[currentLang] }}</p>
@@ -561,10 +795,28 @@
                 const currentLang = ref('en');
                 // 用于存储导航按钮的引用
                 const navBtnRefs = ref([]);
+                // 移动端折叠导航状态
+                const mobileNavOpen = ref(false);
 
                 function setLang(lang) {
                     currentLang.value = lang;
                     showLangModal.value = false;
+                }
+
+                // 快速切换语言
+                function toggleLang() {
+                    currentLang.value = currentLang.value === 'en' ? 'zh' : 'en';
+                }
+
+                // 移动端：切换导航展开/折叠
+                function toggleMobileNav() {
+                    mobileNavOpen.value = !mobileNavOpen.value;
+                }
+
+                // 移动端：点击导航项后滚动到对应区域并关闭菜单
+                function onNavClick(id) {
+                    scrollToSection(id);
+                    mobileNavOpen.value = false;
                 }
 
                 // ESC 关闭弹窗
@@ -680,39 +932,48 @@
                     }
                 }
 
-                // 【修复点2 & 3】优化返回导航逻辑
-                function goToNav() {
+                const MOBILE_NAV_BREAKPOINT = '(max-width: 600px)';
+
+                function isMobileNavCollapsed() {
+                    return window.matchMedia(MOBILE_NAV_BREAKPOINT).matches;
+                }
+
+                function goToNav(sectionId) {
+                    const id = sectionId || activeSection.value;
                     const navBar = document.getElementById('main-nav');
                     if (!navBar) return;
 
-                    // 1. 获取第一个按钮的 DOM 元素
-                    // 使用 navBtnRefs 或者直接 querySelector
-                    const firstBtn = navBtnRefs.value[0] || document.querySelector('.nav-btn');
-                    
-                    if (firstBtn) {
-                        scrollLock = true;
-                        
-                        // 2. 计算滚动位置：Header高度 + 额外间距 (例如 20px)，避免贴顶
-                        const headerHeight = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--header-height')) || 120;
+                    const idx = navItems.value.findIndex(item => item.id === id);
+                    if (idx < 0) return;
+
+                    scrollLock = true;
+
+                    const scrollAndFocus = () => {
+                        const headerHeight = parseFloat(
+                            getComputedStyle(document.documentElement).getPropertyValue('--header-height')
+                        ) || 120;
                         const navRect = navBar.getBoundingClientRect();
-                        const targetY = window.scrollY + navRect.top - headerHeight - 20; 
+                        const targetY = window.scrollY + navRect.top - headerHeight - 20;
 
                         window.scrollTo({
-                            top: targetY,
+                            top: Math.max(0, targetY),
                             behavior: 'smooth'
                         });
 
-                        // 3. 等待滚动完成后聚焦
                         setTimeout(() => {
-                            // 再次尝试获取焦点，确保元素存在
-                            const btn = navBtnRefs.value[0] || document.querySelector('.nav-btn');
-                            if (btn) {
-                                btn.focus();
-                                // 可选：朗读提示（如果浏览器支持且需要）
-                                // btn.setAttribute('aria-live', 'polite'); 
-                            }
+                            const btn = navBtnRefs.value[idx];
+                            btn?.focus();
                             scrollLock = false;
-                        }, 500); // 稍微延长一点时间确保滚动平滑结束
+                        }, 500);
+                    };
+
+                    if (isMobileNavCollapsed()) {
+                        mobileNavOpen.value = true;
+                        nextTick(() => {
+                            setTimeout(scrollAndFocus, 450);
+                        });
+                    } else {
+                        scrollAndFocus();
                     }
                 }
 
@@ -744,6 +1005,47 @@
                 }
 
                 let headerObserver = null;
+
+                // --- 新增：反馈表单逻辑 ---
+                const feedbackForm = ref({
+                    name: '',
+                    email: '',
+                    message: ''
+                });
+                const feedbackSent = ref(false);
+
+                function sendFeedback() {
+                    const { name, email, message } = feedbackForm.value;
+                    
+                    // 基础校验
+                    if (!message.trim()) {
+                        alert(currentLang.value === 'zh' ? '请填写留言内容' : 'Please enter your message');
+                        return;
+                    }
+
+                    // 构建邮件主题和正文
+                    const subject = encodeURIComponent(
+                        currentLang.value === 'zh' 
+                            ? `XO充电宝用户反馈 - ${name || '匿名用户'}` 
+                            : `XO Power Bank Feedback - ${name || 'Anonymous'}`
+                    );
+                    
+                    const body = encodeURIComponent(
+                        `${currentLang.value === 'zh' ? '【用户反馈】' : '[User Feedback]'}\n\n` +
+                        `${currentLang.value === 'zh' ? '称呼' : 'Name'}: ${name || '-'}\n` +
+                        `${currentLang.value === 'zh' ? '邮箱' : 'Email'}: ${email || '-'}\n` +
+                        `${currentLang.value === 'zh' ? '留言' : 'Message'}:\n${message}\n\n` +
+                        `---\nSent from XO Tactile Voice Power Bank Website`
+                    );
+
+                    // 唤起邮件客户端
+                    window.location.href = `mailto:support@wujieqh.com?subject=${subject}&body=${body}`;
+                    
+                    // 显示提示
+                    feedbackSent.value = true;
+                    setTimeout(() => { feedbackSent.value = false; }, 5000);
+                }
+                // --- 反馈表单逻辑结束 ---
 
                 onMounted(() => {
                     window.addEventListener('keydown', onKeydown);
@@ -797,7 +1099,12 @@
                     }
                 });
 
-                return { navItems, activeSection, scrollToSection, goToNav, showLangModal, currentLang, setLang, t, navBtnRefs };
+                return { 
+                    navItems, activeSection, scrollToSection, goToNav, 
+                    showLangModal, currentLang, setLang, toggleLang, t, navBtnRefs,
+                    mobileNavOpen, toggleMobileNav, onNavClick,
+                    feedbackForm, feedbackSent, sendFeedback  // ← 新增这三项
+                };
             }
         }).mount('#app');
     </script>
