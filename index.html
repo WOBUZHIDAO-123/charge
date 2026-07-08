@@ -137,11 +137,12 @@
             position: relative;
         }
 
-        /* 当前激活的导航按钮 */
+        /* 当前激活的导航按钮（box-shadow 高亮，不改变 border 宽度避免撑高 header） */
         .nav-btn--active {
             background: #fff;
             color: #1a1a1a;
-            border: 6px solid #003366;
+            border: 3px solid #003366;
+            box-shadow: 0 0 0 3px #003366;
             font-weight: 700;
         }
 
@@ -241,6 +242,7 @@
             color: #FFFFF0;
             font-size: 18px;
             line-height: 2;
+            scroll-margin-top: var(--header-height, 120px);
         }
 
         .contact-footer h2 {
@@ -259,9 +261,32 @@
             text-decoration: underline;
         }
 
+        /* 三个联系项各自独立容器 */
+        .contact-item {
+            margin: 0 auto;
+            max-width: 400px;
+            padding: 12px 16px;
+            border-radius: 6px;
+            transition: background 0.15s;
+            cursor: default;
+        }
+        .contact-item:hover {
+            background: rgba(255,255,255,0.06);
+        }
+        .contact-item:focus-visible {
+            outline: 4px solid #ffcc00;
+            outline-offset: 2px;
+        }
 
-        /* ========== 响应式：logo 移至标题下方 ========== */
-        @media (max-width: 768px) {
+        .contact-footer-meta {
+            margin-top: 24px;
+            padding-top: 16px;
+            border-top: 1px solid rgba(255,255,255,0.12);
+        }
+
+
+        /* ========== 响应式：手机+平板 logo 居中 ========== */
+        @media (max-width: 1024px) {
             .header-top {
                 flex-direction: column;
                 gap: 12px;
@@ -418,8 +443,39 @@
             transform: rotate(180deg);
         }
 
-        /* ========== 移动端响应式（≤600px 折叠导航） ========== */
-        @media (max-width: 600px) {
+        /* ========== 平板端（641–1024px）：2 行固定网格 ========== */
+        @media (min-width: 641px) and (max-width: 1024px) {
+            .nav-toggle-btn {
+                display: none;
+            }
+            .nav-bar {
+                display: grid;
+                grid-template-columns: repeat(4, 1fr);
+                gap: 8px;
+                max-height: none;
+                opacity: 1;
+                overflow: visible;
+                padding: 4px;
+            }
+            .nav-btn {
+                min-width: 0;
+                width: 100%;
+                min-height: 48px;
+                padding: 10px 8px;
+                font-size: 15px;
+                white-space: normal;
+                word-break: break-word;
+            }
+            .lang-toggle-btn {
+                grid-column: 1 / -1;
+                justify-self: center;
+                max-width: 280px;
+                width: 100%;
+            }
+        }
+
+        /* ========== 手机端（≤640px 折叠导航） ========== */
+        @media (max-width: 640px) {
             /* 显示折叠按钮 */
             .nav-toggle-btn {
                 display: block;
@@ -456,6 +512,9 @@
             }
             .lang-toggle-btn {
                 width: 100%;
+            }
+            .content-section {
+                min-height: auto;
             }
         }
 
@@ -634,14 +693,14 @@
             <!-- 3. 电池指示灯 -->
             <section id="led" class="content-section" aria-labelledby="led-title">
                 <h2 id="led-title">{{ t.pwrPrompt[currentLang] }}</h2>
-                <div tabindex="0" :aria-label="t.pwrPD[currentLang] + ' 4 dots: ' + t.pwr1[currentLang] + '. 3 dots: ' + t.pwr2[currentLang] + '. 2 dots: ' + t.pwr3[currentLang] + '. 1 dot: ' + t.pwr4[currentLang]">
+                <div tabindex="0" :aria-label="t.pwrPD[currentLang] + ' ' + t.pwrLabel1[currentLang] + ': ' + t.pwr1[currentLang] + '. ' + t.pwrLabel2[currentLang] + ': ' + t.pwr2[currentLang] + '. ' + t.pwrLabel3[currentLang] + ': ' + t.pwr3[currentLang] + '. ' + t.pwrLabel4[currentLang] + ': ' + t.pwr4[currentLang]">
                     <div aria-hidden="true">
                         <p>{{ t.pwrPD[currentLang] }}</p>
                         <ul>
-                            <li><strong>4 dots:</strong> {{ t.pwr1[currentLang] }}</li>
-                            <li><strong>3 dots:</strong> {{ t.pwr2[currentLang] }}</li>
-                            <li><strong>2 dots:</strong> {{ t.pwr3[currentLang] }}</li>
-                            <li><strong>1 dot:</strong> {{ t.pwr4[currentLang] }}</li>
+                            <li><strong>{{ t.pwrLabel1[currentLang] }}:</strong> {{ t.pwr1[currentLang] }}</li>
+                            <li><strong>{{ t.pwrLabel2[currentLang] }}:</strong> {{ t.pwr2[currentLang] }}</li>
+                            <li><strong>{{ t.pwrLabel3[currentLang] }}:</strong> {{ t.pwr3[currentLang] }}</li>
+                            <li><strong>{{ t.pwrLabel4[currentLang] }}:</strong> {{ t.pwr4[currentLang] }}</li>
                         </ul>
                     </div>
                 </div>
@@ -697,6 +756,12 @@
                     <div aria-hidden="true">
                         <p><strong>{{ t.fqQ2[currentLang] }}</strong></p>
                         <p>{{ t.fqA2[currentLang] }}</p>
+                    </div>
+                </div>
+                <div tabindex="0" :aria-label="t.fqQ3[currentLang] + ' ' + t.fqA3[currentLang]">
+                    <div aria-hidden="true">
+                        <p><strong>{{ t.fqQ3[currentLang] }}</strong></p>
+                        <p>{{ t.fqA3[currentLang] }}</p>
                     </div>
                 </div>
                 <button class="back-to-nav" @click="goToNav('faq')">{{ t.backToNav[currentLang] }}</button>
@@ -773,15 +838,32 @@
         <!-- 联系我们页脚（全宽） -->
         <footer class="contact-footer" id="contact" aria-labelledby="contact-title">
             <h2 id="contact-title">{{ t.ctTitle[currentLang] }}</h2>
-            <div tabindex="0" :aria-label="t.ctTitle[currentLang] + '. ' + t.ctWeb[currentLang] + ': https://s.wujieqh.com/. ' + t.ctEmail[currentLang] + ': support@wujieqh.com. ' + t.ctWA[currentLang] + ': +1 610 781 6556. ' + t.ctThanks[currentLang] + ' ' + t.ctCopy[currentLang]">
+
+            <!-- 官方网站 -->
+            <div class="contact-item" tabindex="0" :aria-label="t.ctWeb[currentLang] + ': https://s.wujieqh.com/'">
                 <div aria-hidden="true">
                     <p><strong>{{ t.ctWeb[currentLang] }}:</strong> <a href="https://s.wujieqh.com/" target="_blank" rel="noopener noreferrer">https://s.wujieqh.com/</a></p>
-                    <p><strong>{{ t.ctEmail[currentLang] }}:</strong> <a href="mailto:support@wujieqh.com">support@wujieqh.com</a></p>
-                    <p><strong>{{ t.ctWA[currentLang] }}:</strong> +1 610 781 6556</p>
-                    <br>
-                    <p>{{ t.ctThanks[currentLang] }}</p>
-                    <p>{{ t.ctCopy[currentLang] }}</p>
                 </div>
+            </div>
+
+            <!-- 电子邮箱 -->
+            <div class="contact-item" tabindex="0" :aria-label="t.ctEmail[currentLang] + ': support@wujieqh.com'">
+                <div aria-hidden="true">
+                    <p><strong>{{ t.ctEmail[currentLang] }}:</strong> <a href="mailto:support@wujieqh.com">support@wujieqh.com</a></p>
+                </div>
+            </div>
+
+            <!-- 电话联系 -->
+            <div class="contact-item" tabindex="0" :aria-label="t.ctPhone[currentLang] + ': ' + t.ctPhoneVal">
+                <div aria-hidden="true">
+                    <p><strong>{{ t.ctPhone[currentLang] }}:</strong> <a :href="'tel:' + t.ctPhoneTel">{{ t.ctPhoneVal }}</a></p>
+                </div>
+            </div>
+
+            <!-- 感谢与版权 -->
+            <div class="contact-footer-meta">
+                <p>{{ t.ctThanks[currentLang] }}</p>
+                <p>{{ t.ctCopy[currentLang] }}</p>
             </div>
         </footer>
     </div>
@@ -813,12 +895,6 @@
                     mobileNavOpen.value = !mobileNavOpen.value;
                 }
 
-                // 移动端：点击导航项后滚动到对应区域并关闭菜单
-                function onNavClick(id) {
-                    scrollToSection(id);
-                    mobileNavOpen.value = false;
-                }
-
                 // ESC 关闭弹窗
                 function onKeydown(e) {
                     if (e.key === 'Escape' && showLangModal.value) {
@@ -844,27 +920,31 @@
                     subTitle:  { en: 'Accessibility-Focused Design, Non-Visual Power Check', zh: '无障碍设计，非视觉电量检查' },
                     frontView: { en: 'Front View', zh: '正面视图' },
                     frontVD:   { en: 'The lower front features a tactile brand logo, with the tactile brand name \'WUJIE\' above it. The upper-right corner contains four LED battery indicators showing the remaining battery level, while a fifth green LED indicates fast charging. The upper-left side has a multifunction button for checking battery level and switching operating modes.',
-                                 zh: '正面下方有触感品牌标志，上方有触感品牌名称"WUJIE"。右上角有四个LED电量指示灯显示剩余电量，第五个绿色LED指示快充状态。左上侧有一个多功能按钮，用于检查电量和切换工作模式。' },
+                                 zh: '正面下方有触感品牌标志，上方有品牌名称"WUJIE"。右上角有四个LED电量指示灯显示剩余电量，第五个绿色LED指示快充状态。左上侧有一个多功能按钮，用于检查电量和切换工作模式。' },
                     topView:   { en: 'Top View', zh: '顶部视图' },
                     topVD:     { en: 'From left to right: 4-dot tactile battery indicator, speaker, USB-C port, speaker, and USB-A port. Dual speakers provide clear voice announcements, while dual charging ports support multiple devices.',
-                                 zh: '从左到右：四点触感电量指示器、扬声器、USB-C接口、扬声器、USB-A接口。双扬声器提供清晰的语音播报，双充电口支持多设备同时充电。' },
-                    tactileBI: { en: 'Tactile Battery Indicator', zh: '触感电量指示器' },
+                                 zh: '从左到右：四点触觉电量显示、扬声器、USB-C接口、扬声器、USB-A接口。双扬声器提供清晰的语音播报，双充电口支持多设备同时充电。' },
+                    tactileBI: { en: 'Tactile Battery Indicator', zh: '触觉电量指示器' },
                     tactileBD: { en: 'The four tactile dots are the core accessibility feature. By feeling the number of raised dots, users can independently identify the remaining battery level in both quiet and noisy environments.',
-                                 zh: '四个触感凸点是核心无障碍功能。通过触摸凸点数量，用户可以在安静或嘈杂环境中独立识别剩余电量。' },
+                                 zh: '四个触觉凸点是核心无障碍功能。通过触摸凸点数量，用户可以在安静或嘈杂环境中独立识别剩余电量。' },
                     btnTitle:  { en: 'Button Functions', zh: '按键功能' },
                     singleP:   { en: 'Single Press', zh: '单击' },
                     singlePD:  { en: 'Check battery level', zh: '检查电池电量' },
                     doubleP:   { en: 'Double Press', zh: '双击' },
                     doublePD:  { en: 'Turn voice prompts on/off (Silent Mode)', zh: '开启/关闭语音提示（静音模式）' },
                     longP:     { en: 'Long Press', zh: '长按' },
-                    longPD:    { en: 'Switch between Voice Mode, Tactile Mode, and Voice + Tactile Mode', zh: '切换语音模式、触感模式和语音+触感模式' },
+                    longPD:    { en: 'Switch between Voice Mode, Tactile Mode, and Voice + Tactile Mode', zh: '切换语音模式、触觉模式和语音+触觉模式' },
                     backToNav: { en: '\u2191 Back to navigation', zh: '\u2191 返回导航' },
-                    pwrPrompt: { en: 'Tactile Power Prompt', zh: '触感电量提示' },
-                    pwrPD:     { en: 'Under dot mode and VoiceOver + dot dual mode, tap the button to get battery level reminder:', zh: '在触感点模式和语音+触感点双模式下，轻按按钮可获取电量提醒：' },
+                    pwrPrompt: { en: 'Tactile Power Prompt', zh: '触觉电量提示' },
+                    pwrPD:     { en: 'Under dot mode and VoiceOver + dot dual mode, tap the button to get battery level reminder:', zh: '在触觉模式和语音+触觉双模式下，轻按按钮可获取电量提醒：' },
                     pwr1:      { en: '75–100% power remaining', zh: '75–100% 剩余电量' },
                     pwr2:      { en: '50–75% power remaining',  zh: '50–75% 剩余电量' },
                     pwr3:      { en: '25–50% power remaining',  zh: '25–50% 剩余电量' },
                     pwr4:      { en: '0–25% power remaining',   zh: '0–25% 剩余电量' },
+                    pwrLabel1: { en: '4 dots', zh: '四点凸起' },
+                    pwrLabel2: { en: '3 dots', zh: '三点凸起' },
+                    pwrLabel3: { en: '2 dots', zh: '两点凸起' },
+                    pwrLabel4: { en: '1 dot',  zh: '一点凸起' },
                     vpTitle:   { en: 'Voice Prompts', zh: '语音提示' },
                     vp1:       { en: 'Start charge', zh: '开始充电' },
                     vp2:       { en: 'Start discharge', zh: '开始放电' },
@@ -882,22 +962,26 @@
                     sp4:       { en: 'USB-A Port', zh: 'USB-A 接口' },
                     sp4v:      { en: 'Support Output Only', zh: '仅支持输出' },
                     sp5:       { en: 'Product Dimensions', zh: '产品尺寸' },
-                    sp5v:      { en: '145 × 73 × 16 mm', zh: '145 × 73 × 16 毫米' },
+                    sp5v:      { en: '145 × 73 × 16 mm', zh: '145mm × 73mm × 16mm' },
                     sp6:       { en: 'Net Weight', zh: '净重' },
-                    sp6v:      { en: '208 g', zh: '208 克' },
+                    sp6v:      { en: '208 g', zh: '208 g' },
                     fqTitle:   { en: 'Frequently Asked Questions', zh: '常见问题' },
                     fqQ1:      { en: 'Why doesn\'t it speak?', zh: '为什么没有语音？' },
                     fqA1:      { en: 'Double press the button to enable voice prompts.', zh: '双击按钮启用语音提示。' },
                     fqQ2:      { en: 'Can I charge multiple devices?', zh: '可以同时充多个设备吗？' },
                     fqA2:      { en: 'Yes.', zh: '可以。' },
+                    fqQ3:      { en: 'Can I take it on a plane?', zh: '是否可以带上飞机？' },
+                    fqA3:      { en: 'Yes, this product is 3C certified and can be taken on planes, trains, etc.', zh: '产品已通过3C认证，可以带上飞机、火车等场所。' },
                     fbTitle:   { en: 'We\'d Love Your Feedback', zh: '我们期待您的反馈' },
-                    fbD:       { en: 'Please share your feedback on the packaging, tactile design, voice prompts, and overall experience.', zh: '请分享您对包装、触感设计、语音提示和整体体验的反馈意见。' },
+                    fbD:       { en: 'Please share your feedback on the packaging, tactile design, voice prompts, and overall experience.', zh: '请分享您对包装、触觉设计、语音提示和整体体验的反馈意见。' },
                     ctTitle:   { en: 'Contact Us', zh: '联系我们' },
                     ctWeb:     { en: 'Website', zh: '官方网站' },
                     ctEmail:   { en: 'Email', zh: '电子邮箱' },
-                    ctWA:      { en: 'WhatsApp', zh: 'WhatsApp' },
+                    ctPhone:   { en: 'Phone', zh: '电话联系' },
+                    ctPhoneVal: '19030916561（微信同号）',
+                    ctPhoneTel: '19030916561',
                     ctThanks:  { en: 'Thank you for choosing XO.', zh: '感谢您选择 XO。' },
-                    ctCopy:    { en: '\u00a9 2026 Chongqing Infinite Horizons Co., Ltd.', zh: '\u00a9 2026 重庆无极量子科技有限公司' },
+                    ctCopy:    { en: '\u00a9 2026 Chongqing Infinite Horizons Co., Ltd.', zh: '重庆无界启航创新科技有限公司' },
                 };
 
                 const navItems = computed(() => [
@@ -913,29 +997,169 @@
 
                 const activeSection = ref('overview');
 
-                // 滚动监听变量
-                let scrollTimer = null;
+                const BREAKPOINTS = { phone: 640, tablet: 1024 };
+
                 let scrollLock = false;
+                let sectionObserver = null;
+                const sectionRatios = new Map();
+                let headerObserver = null;
+
+                function getLayoutMode() {
+                    const w = window.innerWidth;
+                    if (w <= BREAKPOINTS.phone) return 'phone';
+                    if (w <= BREAKPOINTS.tablet) return 'tablet';
+                    return 'desktop';
+                }
+
+                function isMobileNavCollapsed() {
+                    return getLayoutMode() === 'phone';
+                }
+
+                function getHeaderHeight() {
+                    const h = parseFloat(
+                        getComputedStyle(document.documentElement).getPropertyValue('--header-height')
+                    );
+                    if (h && !isNaN(h)) return h;
+                    const headerEl = document.querySelector('.app-header');
+                    return headerEl?.offsetHeight || 120;
+                }
+
+                function getScrollOffset() {
+                    const extra = { phone: 16, tablet: 20, desktop: 24 };
+                    return getHeaderHeight() + extra[getLayoutMode()];
+                }
+
+                function prefersReducedMotion() {
+                    return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+                }
+
+                function scrollToY(top, onDone) {
+                    const behavior = prefersReducedMotion() ? 'instant' : 'smooth';
+                    const target = Math.max(0, top);
+                    window.scrollTo({ top: target, behavior });
+
+                    if (behavior === 'instant') {
+                        onDone?.();
+                        return;
+                    }
+
+                    let lastY = window.scrollY;
+                    let stableFrames = 0;
+                    let frame = 0;
+                    const maxFrames = 90;
+                    let done = false;
+
+                    const finish = () => {
+                        if (done) return;
+                        done = true;
+                        onDone?.();
+                    };
+
+                    const poll = () => {
+                        frame++;
+                        if (Math.abs(window.scrollY - lastY) < 1) {
+                            stableFrames++;
+                            if (stableFrames >= 3 || frame >= maxFrames) {
+                                finish();
+                                return;
+                            }
+                        } else {
+                            stableFrames = 0;
+                            lastY = window.scrollY;
+                        }
+                        requestAnimationFrame(poll);
+                    };
+
+                    requestAnimationFrame(poll);
+                    setTimeout(finish, 900);
+                }
+
+                function waitForHeaderStable(callback) {
+                    const delay = getLayoutMode() === 'phone' ? 420 : 50;
+                    requestAnimationFrame(() => {
+                        setTimeout(callback, delay);
+                    });
+                }
+
+                function updateActiveFromObserver() {
+                    if (scrollLock) return;
+
+                    const scrollBottom = window.scrollY + window.innerHeight;
+                    const pageBottom = document.documentElement.scrollHeight;
+                    if (pageBottom - scrollBottom <= 2) {
+                        activeSection.value = navItems.value[navItems.value.length - 1].id;
+                        return;
+                    }
+
+                    let bestId = navItems.value[0].id;
+                    let bestRatio = 0;
+                    for (const item of navItems.value) {
+                        const ratio = sectionRatios.get(item.id) || 0;
+                        if (ratio > bestRatio) {
+                            bestRatio = ratio;
+                            bestId = item.id;
+                        }
+                    }
+                    if (bestRatio > 0) {
+                        activeSection.value = bestId;
+                    }
+                }
+
+                function setupSectionObserver() {
+                    if (sectionObserver) {
+                        sectionObserver.disconnect();
+                        sectionObserver = null;
+                    }
+                    sectionRatios.clear();
+
+                    const headerH = getHeaderHeight();
+                    sectionObserver = new IntersectionObserver(
+                        (entries) => {
+                            if (scrollLock) return;
+                            for (const entry of entries) {
+                                sectionRatios.set(entry.target.id, entry.intersectionRatio);
+                            }
+                            updateActiveFromObserver();
+                        },
+                        {
+                            root: null,
+                            rootMargin: `-${headerH}px 0px -55% 0px`,
+                            threshold: [0, 0.1, 0.25, 0.5, 0.75, 1]
+                        }
+                    );
+
+                    for (const item of navItems.value) {
+                        const el = document.getElementById(item.id);
+                        if (el) sectionObserver.observe(el);
+                    }
+                }
 
                 function scrollToSection(id) {
-                    activeSection.value = id;
                     const el = document.getElementById(id);
-                    if (el) {
-                        scrollLock = true;
-                        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                        setTimeout(() => { scrollLock = false; }, 600);
+                    if (!el) return;
+
+                    activeSection.value = id;
+                    scrollLock = true;
+
+                    const top = el.getBoundingClientRect().top + window.scrollY - getScrollOffset();
+                    scrollToY(top, () => {
                         const heading = el.querySelector('h2');
                         if (heading) {
                             heading.setAttribute('tabindex', '-1');
                             heading.focus({ preventScroll: true });
                         }
-                    }
+                        scrollLock = false;
+                        updateActiveFromObserver();
+                    });
                 }
 
-                const MOBILE_NAV_BREAKPOINT = '(max-width: 600px)';
-
-                function isMobileNavCollapsed() {
-                    return window.matchMedia(MOBILE_NAV_BREAKPOINT).matches;
+                function onNavClick(id) {
+                    if (isMobileNavCollapsed()) {
+                        mobileNavOpen.value = false;
+                        waitForHeaderStable(() => scrollToSection(id));
+                    } else {
+                        scrollToSection(id);
+                    }
                 }
 
                 function goToNav(sectionId) {
@@ -946,65 +1170,31 @@
                     const idx = navItems.value.findIndex(item => item.id === id);
                     if (idx < 0) return;
 
-                    scrollLock = true;
-
                     const scrollAndFocus = () => {
-                        const headerHeight = parseFloat(
-                            getComputedStyle(document.documentElement).getPropertyValue('--header-height')
-                        ) || 120;
-                        const navRect = navBar.getBoundingClientRect();
-                        const targetY = window.scrollY + navRect.top - headerHeight - 20;
-
-                        window.scrollTo({
-                            top: Math.max(0, targetY),
-                            behavior: 'smooth'
-                        });
-
-                        setTimeout(() => {
+                        scrollLock = true;
+                        const top = navBar.getBoundingClientRect().top + window.scrollY - getScrollOffset();
+                        scrollToY(top, () => {
                             const btn = navBtnRefs.value[idx];
                             btn?.focus();
                             scrollLock = false;
-                        }, 500);
+                            updateActiveFromObserver();
+                        });
                     };
 
                     if (isMobileNavCollapsed()) {
                         mobileNavOpen.value = true;
                         nextTick(() => {
-                            setTimeout(scrollAndFocus, 450);
+                            waitForHeaderStable(scrollAndFocus);
                         });
                     } else {
                         scrollAndFocus();
                     }
                 }
 
-                // 滚动监听
-                function onScroll() {
+                function onScrollBottomCheck() {
                     if (scrollLock) return;
-                    if (scrollTimer) return;
-                    scrollTimer = setTimeout(() => {
-                        scrollTimer = null;
-                        const headerH = parseFloat(
-                            getComputedStyle(document.documentElement).getPropertyValue('--header-height')
-                        ) || 120;
-                        let current = navItems.value[0].id;
-                        for (const item of navItems.value) {
-                            const el = document.getElementById(item.id);
-                            if (!el) continue;
-                            const rect = el.getBoundingClientRect();
-                            if (rect.top <= headerH + 10) {
-                                current = item.id;
-                            }
-                        }
-                        const scrollBottom = window.scrollY + window.innerHeight;
-                        const pageBottom = document.documentElement.scrollHeight;
-                        if (pageBottom - scrollBottom <= 2) {
-                            current = navItems.value[navItems.value.length - 1].id;
-                        }
-                        activeSection.value = current;
-                    }, 80);
+                    updateActiveFromObserver();
                 }
-
-                let headerObserver = null;
 
                 // --- 新增：反馈表单逻辑 ---
                 const feedbackForm = ref({
@@ -1047,9 +1237,30 @@
                 }
                 // --- 反馈表单逻辑结束 ---
 
+                let logoWrap = null;
+                let alignFirstBtn = null;
+                let headerTopEl = null;
+
+                function alignLogo() {
+                    if (!logoWrap || !alignFirstBtn || !headerTopEl) return;
+                    if (getLayoutMode() !== 'desktop') {
+                        logoWrap.style.left = '';
+                        return;
+                    }
+                    const btnRect = alignFirstBtn.getBoundingClientRect();
+                    const topRect = headerTopEl.getBoundingClientRect();
+                    logoWrap.style.left = (btnRect.left - topRect.left) + 'px';
+                }
+
+                function onResize() {
+                    alignLogo();
+                    setupSectionObserver();
+                }
+
                 onMounted(() => {
                     window.addEventListener('keydown', onKeydown);
-                    window.addEventListener('scroll', onScroll, { passive: true });
+                    window.addEventListener('scroll', onScrollBottomCheck, { passive: true });
+                    window.addEventListener('resize', onResize);
 
                     if (showLangModal.value) {
                         nextTick(() => {
@@ -1058,44 +1269,39 @@
                         });
                     }
 
-                    // 动态对齐 logo
-                    const logoWrap = document.querySelector('.header-logo-wrap');
-                    const firstBtn = document.querySelector('.nav-btn');
-                    const headerTop = document.querySelector('.header-top');
+                    logoWrap = document.querySelector('.header-logo-wrap');
+                    alignFirstBtn = document.querySelector('.nav-btn');
+                    headerTopEl = document.querySelector('.header-top');
                     const headerEl = document.querySelector('.app-header');
 
-                    function alignLogo() {
-                        if (!logoWrap || !firstBtn || !headerTop) return;
-                        if (window.innerWidth <= 768) {
-                            logoWrap.style.left = '';
-                            return;
-                        }
-                        const btnRect = firstBtn.getBoundingClientRect();
-                        const topRect = headerTop.getBoundingClientRect();
-                        logoWrap.style.left = (btnRect.left - topRect.left) + 'px';
-                    }
-
                     alignLogo();
-                    window.addEventListener('resize', alignLogo);
 
                     if (headerEl) {
-                        headerObserver = new ResizeObserver((entries) => {
-                            for (const entry of entries) {
-                                const h = entry.borderBoxSize?.[0]?.blockSize
-                                       || entry.contentRect.height;
-                                document.documentElement.style.setProperty('--header-height', h + 'px');
-                            }
+                        headerObserver = new ResizeObserver(() => {
+                            const h = headerEl.offsetHeight;
+                            document.documentElement.style.setProperty('--header-height', h + 'px');
                             alignLogo();
+                            setupSectionObserver();
                         });
                         headerObserver.observe(headerEl);
                     }
+
+                    nextTick(() => {
+                        setupSectionObserver();
+                        updateActiveFromObserver();
+                    });
                 });
                 onUnmounted(() => {
                     window.removeEventListener('keydown', onKeydown);
-                    window.removeEventListener('scroll', onScroll);
+                    window.removeEventListener('scroll', onScrollBottomCheck);
+                    window.removeEventListener('resize', onResize);
                     if (headerObserver) {
                         headerObserver.disconnect();
                         headerObserver = null;
+                    }
+                    if (sectionObserver) {
+                        sectionObserver.disconnect();
+                        sectionObserver = null;
                     }
                 });
 
