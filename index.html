@@ -610,7 +610,7 @@
                 <div class="header-logo-wrap">
                     <img src="product-logo.png" alt="Product Logo">
                 </div>
-                <h1>XO Tactile Voice Power Bank</h1>
+                <h1>{{ t.pageTitle[currentLang] }}</h1>
             </div>
             <!-- 移动端折叠导航按钮 -->
             <button
@@ -892,11 +892,14 @@
                 function setLang(lang) {
                     currentLang.value = lang;
                     showLangModal.value = false;
+                    applyPageLang(lang);
                 }
 
                 // 快速切换语言
                 function toggleLang() {
-                    currentLang.value = currentLang.value === 'en' ? 'zh' : 'en';
+                    const lang = currentLang.value === 'en' ? 'zh' : 'en';
+                    currentLang.value = lang;
+                    applyPageLang(lang);
                 }
 
                 // 移动端：切换导航展开/折叠
@@ -924,6 +927,7 @@
 
                 // 双语翻译数据
                 const t = {
+                    pageTitle:            { en: 'XO Tactile Voice Power Bank',   zh: 'XO 触感语音充电宝' },
                     skipLink:             { en: 'Skip to main content',            zh: '跳到主要内容' },
                     navAria:              { en: 'Main navigation',                 zh: '主导航' },
                     mainAria:             { en: 'Main content',                    zh: '主要内容' },
@@ -1003,6 +1007,11 @@
                     ctThanks:  { en: 'Thank you for choosing XO.', zh: '感谢您选择 XO。' },
                     ctCopy:    { en: '\u00a9 2026 Chongqing Infinite Horizons Co., Ltd.', zh: '重庆无界启航创新科技有限公司' },
                 };
+
+                function applyPageLang(lang) {
+                    document.title = t.pageTitle[lang];
+                    document.documentElement.lang = lang === 'zh' ? 'zh-CN' : 'en';
+                }
 
                 const navItems = computed(() => [
                     { id: 'overview',  label: t.overview[currentLang.value] },
@@ -1283,6 +1292,7 @@
                 }
 
                 onMounted(() => {
+                    applyPageLang(currentLang.value);
                     window.addEventListener('keydown', onKeydown);
                     window.addEventListener('scroll', onScrollBottomCheck, { passive: true });
                     window.addEventListener('resize', onResize);
