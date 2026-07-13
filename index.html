@@ -487,6 +487,8 @@
                 max-height: 0;
                 overflow: hidden;
                 opacity: 0;
+                visibility: hidden;
+                pointer-events: none;
                 transition: max-height 0.4s ease, opacity 0.3s ease, padding 0.3s ease;
                 padding: 0 4px;
                 gap: 0;
@@ -495,6 +497,8 @@
             .nav-bar--open {
                 max-height: 600px;
                 opacity: 1;
+                visibility: visible;
+                pointer-events: auto;
                 padding: 10px 4px 6px;
                 gap: 8px;
             }
@@ -610,6 +614,7 @@
             </div>
             <!-- 移动端折叠导航按钮 -->
             <button
+                ref="navToggleRef"
                 class="nav-toggle-btn"
                 :class="{ 'nav-toggle-btn--open': mobileNavOpen }"
                 @click="toggleMobileNav"
@@ -623,7 +628,9 @@
             <!-- 给 nav 加个 ID 方便定位 -->
             <nav class="nav-bar" id="main-nav"
                  :class="{ 'nav-bar--open': mobileNavOpen }"
-                 :aria-label="t.navAria[currentLang]">
+                 :aria-label="t.navAria[currentLang]"
+                 :aria-hidden="mobileNavA11yHidden ? true : null"
+                 :inert="mobileNavA11yHidden ? true : null">
                 <button
                     v-for="(item, index) in navItems"
                     :key="item.id"
@@ -879,6 +886,8 @@
                 const navBtnRefs = ref([]);
                 // 移动端折叠导航状态
                 const mobileNavOpen = ref(false);
+                const navToggleRef = ref(null);
+                const windowWidth = ref(window.innerWidth);
 
                 function setLang(lang) {
                     currentLang.value = lang;
@@ -892,7 +901,18 @@
 
                 // 移动端：切换导航展开/折叠
                 function toggleMobileNav() {
-                    mobileNavOpen.value = !mobileNavOpen.value;
+                    const opening = !mobileNavOpen.value;
+                    mobileNavOpen.value = opening;
+
+                    if (!isMobileNavCollapsed()) return;
+
+                    nextTick(() => {
+                        if (opening) {
+                            waitForHeaderStable(() => navBtnRefs.value[0]?.focus());
+                        } else {
+                            navToggleRef.value?.focus();
+                        }
+                    });
                 }
 
                 // ESC 关闭弹窗
@@ -998,6 +1018,10 @@
                 const activeSection = ref('overview');
 
                 const BREAKPOINTS = { phone: 640, tablet: 1024 };
+
+                const mobileNavA11yHidden = computed(() =>
+                    windowWidth.value <= BREAKPOINTS.phone && !mobileNavOpen.value
+                );
 
                 let scrollLock = false;
                 let sectionObserver = null;
@@ -1253,6 +1277,7 @@
                 }
 
                 function onResize() {
+                    windowWidth.value = window.innerWidth;
                     alignLogo();
                     setupSectionObserver();
                 }
@@ -1308,8 +1333,8 @@
                 return { 
                     navItems, activeSection, scrollToSection, goToNav, 
                     showLangModal, currentLang, setLang, toggleLang, t, navBtnRefs,
-                    mobileNavOpen, toggleMobileNav, onNavClick,
-                    feedbackForm, feedbackSent, sendFeedback  // ← 新增这三项
+                    mobileNavOpen, mobileNavA11yHidden, navToggleRef, toggleMobileNav, onNavClick,
+                    feedbackForm, feedbackSent, sendFeedback
                 };
             }
         }).mount('#app');
