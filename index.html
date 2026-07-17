@@ -102,6 +102,9 @@
 
         .nav-btn {
             /* 大按钮，方便盲人触碰 */
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
             min-height: 56px;
             min-width: 130px;
             padding: 14px 22px;
@@ -116,6 +119,7 @@
             user-select: none;
             -webkit-tap-highlight-color: transparent;
             white-space: nowrap;
+            text-decoration: none;
             /* 关键：移除默认 outline，用 box-shadow 或 border 替代，或者保留 outline 但美化它 */
             outline: none; 
         }
@@ -143,6 +147,12 @@
             border: 3px solid #003366;
             box-shadow: 0 0 0 3px #003366;
             font-weight: 700;
+        }
+
+        /* 返回导航时脚本聚焦的高亮（:focus-visible 对程序化 focus 不生效） */
+        .nav-btn--return-focus {
+            outline: 4px solid #ffcc00;
+            outline-offset: 2px;
         }
 
         /* 导航栏内的语言切换按钮 */
@@ -202,8 +212,8 @@
         }
 
         .content-section ul {
-            list-style: none;
-            padding-left: 0;
+            list-style: disc;
+            padding-inline-start: 28px;
             margin-bottom: 12px;
         }
 
@@ -211,17 +221,7 @@
             font-size: 18px;
             color: #333;
             line-height: 1.8;
-            padding-left: 24px;
-            position: relative;
             margin-bottom: 6px;
-        }
-
-        .content-section li::before {
-            content: "·";
-            position: absolute;
-            left: 8px;
-            font-weight: bold;
-            color: #2d2d2d;
         }
 
         .content-section .subtitle {
@@ -230,15 +230,6 @@
             margin-bottom: 0;
             line-height: 1.6;
             font-style: italic;
-        }
-
-        /* 朗读块：TalkBack 语义分组 */
-        [role="group"][tabindex="0"] {
-            outline: none;
-        }
-        [role="group"][tabindex="0"]:focus-visible {
-            outline: 4px solid #ffcc00;
-            outline-offset: 2px;
         }
 
         /* ========== 反馈表单 ========== */
@@ -326,16 +317,18 @@
         }
 
         .contact-footer .contact-link {
+            display: flex;
+            align-items: center;
+            justify-content: center;
             margin: 0 auto;
             max-width: 400px;
+            min-height: 44px;
             padding: 12px 16px;
             border-radius: 6px;
+            color: #fff;
+            text-decoration: underline;
         }
-        .contact-footer .contact-link a {
-            display: inline-block;
-            padding: 4px 0;
-        }
-        .contact-footer .contact-link a:focus-visible {
+        .contact-footer .contact-link:focus-visible {
             outline: 4px solid #ffcc00;
             outline-offset: 2px;
         }
@@ -409,7 +402,7 @@
             border-left: 6px solid #003366;
         }
 
-        .lang-modal p {
+        .lang-modal h2 {
             font-size: 22px;
             color: #1a1a1a;
             margin-bottom: 32px;
@@ -606,7 +599,7 @@
             }
             .nav-btn {
                 font-size: 14px;
-                min-height: 42px;
+                min-height: 44px;
                 padding: 8px 10px;
             }
             .content-section {
@@ -626,7 +619,7 @@
             .lang-modal {
                 padding: 32px 24px 28px;
             }
-            .lang-modal p {
+            .lang-modal h2 {
                 font-size: 18px;
             }
             .lang-btn {
@@ -638,7 +631,7 @@
             .back-to-nav {
                 font-size: 14px;
                 padding: 8px 14px;
-                min-height: 38px;
+                min-height: 44px;
             }
             .contact-footer {
                 padding: 28px 16px;
@@ -653,19 +646,22 @@
 <body>
     <div id="app">
         <!-- 语言选择弹窗 -->
-        <div v-if="showLangModal" class="lang-overlay" role="dialog" aria-modal="true" :aria-label="t.langModalAria[currentLang]">
-            <div class="lang-modal">
-                <p>{{ t.langModalPrompt[currentLang] }}</p>
+        <div v-if="showLangModal" class="lang-overlay">
+            <div class="lang-modal" role="dialog" aria-modal="true" aria-labelledby="language-dialog-title">
+                <h2 id="language-dialog-title">
+                    <span lang="en">Please select your language</span><br>
+                    <span lang="zh-CN">请选择语言</span>
+                </h2>
                 <div class="lang-btn-group">
-                    <button class="lang-btn" @click="setLang('en')">English</button>
-                    <button class="lang-btn" @click="setLang('zh')">中文</button>
+                    <button type="button" class="lang-btn" lang="en" @click="setLang('en')">English</button>
+                    <button type="button" class="lang-btn" lang="zh-CN" @click="setLang('zh')">中文</button>
                 </div>
             </div>
         </div>
 
-        <div :inert="showLangModal ? true : null" :aria-hidden="showLangModal ? true : null">
+        <div :inert="showLangModal" :aria-hidden="showLangModal ? 'true' : null">
         <!-- 无障碍跳过链接 -->
-        <a href="#main-content" class="skip-link">{{ t.skipLink[currentLang] }}</a>
+        <a href="#main-content" class="skip-link" @click.prevent="onSkipLinkClick">{{ t.skipLink[currentLang] }}</a>
 
         <!-- 头部 + 导航栏 -->
         <header class="app-header">
@@ -673,7 +669,7 @@
                 <div class="header-logo-wrap">
                     <img src="product-logo.png" :alt="t.logoAlt[currentLang]">
                 </div>
-                <h1>{{ t.pageTitle[currentLang] }}</h1>
+                <h1 ref="pageTitleRef" tabindex="-1">{{ t.pageTitle[currentLang] }}</h1>
             </div>
             <!-- 移动端折叠导航按钮 -->
             <button
@@ -694,152 +690,115 @@
                  :aria-label="t.navAria[currentLang]"
                  :aria-hidden="mobileNavA11yHidden ? true : null"
                  :inert="mobileNavA11yHidden ? true : null">
-                <button
+                <a
                     v-for="(item, index) in navItems"
                     :key="item.id"
                     ref="navBtnRefs"
+                    :href="'#' + item.id"
                     class="nav-btn"
                     :class="{ 'nav-btn--active': activeSection === item.id }"
-                    :aria-current="activeSection === item.id ? 'true' : undefined"
-                    :aria-label="t.goTo[currentLang] + item.label"
-                    @click="onNavClick(item.id)"
-                >{{ item.label }}</button>
+                    :aria-current="activeSection === item.id ? 'location' : undefined"
+                    @click.prevent="onNavClick(item.id)"
+                >{{ item.label }}</a>
 
                     <!-- 快速语言切换按钮 -->
                     <button
+                        type="button"
                         class="nav-btn lang-toggle-btn"
                         @click="toggleLang"
-                        :aria-label="'Switch Language / 切换语言'"
+                        :aria-label="t.switchLang[currentLang]"
                     >English / 中文</button>
             </nav>
         </header>
 
         <!-- 主内容区 -->
-        <main class="app-main" id="main-content" :aria-label="t.mainAria[currentLang]">
+        <main class="app-main" id="main-content" tabindex="-1">
             <!-- 1. 产品概览 -->
             <section id="overview" class="content-section" aria-labelledby="overview-title">
-                <h2 id="overview-title">{{ t.overview[currentLang] }}</h2>
-                <div role="group" tabindex="0" :aria-label="t.subTitle[currentLang]">
-                    <div aria-hidden="true">
-                        <p class="subtitle">{{ t.subTitle[currentLang] }}</p>
-                    </div>
-                </div>
-                <div role="group" tabindex="0" :aria-label="t.frontView[currentLang] + '. ' + t.frontVD[currentLang]">
-                    <div aria-hidden="true">
-                        <h3>{{ t.frontView[currentLang] }}</h3>
-                        <p>{{ t.frontVD[currentLang] }}</p>
-                    </div>
-                </div>
-                <div role="group" tabindex="0" :aria-label="t.topView[currentLang] + '. ' + t.topVD[currentLang]">
-                    <div aria-hidden="true">
-                        <h3>{{ t.topView[currentLang] }}</h3>
-                        <p>{{ t.topVD[currentLang] }}</p>
-                    </div>
-                </div>
-                <div role="group" tabindex="0" :aria-label="t.tactileBI[currentLang] + '. ' + t.tactileBD[currentLang]">
-                    <div aria-hidden="true">
-                        <h3>{{ t.tactileBI[currentLang] }}</h3>
-                        <p>{{ t.tactileBD[currentLang] }}</p>
-                    </div>
-                </div>
+                <h2 id="overview-title" tabindex="-1">{{ t.overview[currentLang] }}</h2>
+                <p class="subtitle">{{ t.subTitle[currentLang] }}</p>
+                <h3>{{ t.frontView[currentLang] }}</h3>
+                <p>{{ t.frontVD[currentLang] }}</p>
+                <h3>{{ t.topView[currentLang] }}</h3>
+                <p>{{ t.topVD[currentLang] }}</p>
+                <h3>{{ t.tactileBI[currentLang] }}</h3>
+                <p>{{ t.tactileBD[currentLang] }}</p>
                 <button class="back-to-nav" @click="goToNav('overview')">{{ t.backToNav[currentLang] }}</button>
             </section>
 
             <!-- 2. 按键功能 -->
             <section id="buttons" class="content-section" aria-labelledby="buttons-title">
-                <h2 id="buttons-title">{{ t.btnTitle[currentLang] }}</h2>
-                <div role="group" tabindex="0" :aria-label="t.singleP[currentLang] + ': ' + t.singlePD[currentLang] + '. ' + t.doubleP[currentLang] + ': ' + t.doublePD[currentLang] + '. ' + t.longP[currentLang] + ': ' + t.longPD[currentLang]">
-                    <div aria-hidden="true">
-                        <ul>
-                            <li><strong>{{ t.singleP[currentLang] }}:</strong> {{ t.singlePD[currentLang] }}</li>
-                            <li><strong>{{ t.doubleP[currentLang] }}:</strong> {{ t.doublePD[currentLang] }}</li>
-                            <li><strong>{{ t.longP[currentLang] }}:</strong> {{ t.longPD[currentLang] }}</li>
-                        </ul>
-                    </div>
-                </div>
+                <h2 id="buttons-title" tabindex="-1">{{ t.btnTitle[currentLang] }}</h2>
+                <ul>
+                    <li><strong>{{ t.singleP[currentLang] }}:</strong> {{ t.singlePD[currentLang] }}</li>
+                    <li><strong>{{ t.doubleP[currentLang] }}:</strong> {{ t.doublePD[currentLang] }}</li>
+                    <li><strong>{{ t.longP[currentLang] }}:</strong> {{ t.longPD[currentLang] }}</li>
+                </ul>
                 <button class="back-to-nav" @click="goToNav('buttons')">{{ t.backToNav[currentLang] }}</button>
             </section>
 
             <!-- 3. 电池指示灯 -->
             <section id="led" class="content-section" aria-labelledby="led-title">
-                <h2 id="led-title">{{ t.pwrPrompt[currentLang] }}</h2>
-                <div role="group" tabindex="0" :aria-label="t.pwrPD[currentLang] + ' ' + t.pwrLabel1[currentLang] + ': ' + t.pwr1[currentLang] + '. ' + t.pwrLabel2[currentLang] + ': ' + t.pwr2[currentLang] + '. ' + t.pwrLabel3[currentLang] + ': ' + t.pwr3[currentLang] + '. ' + t.pwrLabel4[currentLang] + ': ' + t.pwr4[currentLang]">
-                    <div aria-hidden="true">
-                        <p>{{ t.pwrPD[currentLang] }}</p>
-                        <ul>
-                            <li><strong>{{ t.pwrLabel1[currentLang] }}:</strong> {{ t.pwr1[currentLang] }}</li>
-                            <li><strong>{{ t.pwrLabel2[currentLang] }}:</strong> {{ t.pwr2[currentLang] }}</li>
-                            <li><strong>{{ t.pwrLabel3[currentLang] }}:</strong> {{ t.pwr3[currentLang] }}</li>
-                            <li><strong>{{ t.pwrLabel4[currentLang] }}:</strong> {{ t.pwr4[currentLang] }}</li>
-                        </ul>
-                    </div>
-                </div>
+                <h2 id="led-title" tabindex="-1">{{ t.pwrPrompt[currentLang] }}</h2>
+                <p>{{ t.pwrPD[currentLang] }}</p>
+                <ul>
+                    <li><strong>{{ t.pwrLabel1[currentLang] }}:</strong> {{ t.pwr1[currentLang] }}</li>
+                    <li><strong>{{ t.pwrLabel2[currentLang] }}:</strong> {{ t.pwr2[currentLang] }}</li>
+                    <li><strong>{{ t.pwrLabel3[currentLang] }}:</strong> {{ t.pwr3[currentLang] }}</li>
+                    <li><strong>{{ t.pwrLabel4[currentLang] }}:</strong> {{ t.pwr4[currentLang] }}</li>
+                </ul>
                 <button class="back-to-nav" @click="goToNav('led')">{{ t.backToNav[currentLang] }}</button>
             </section>
 
             <!-- 4. 语音提示 -->
             <section id="voice" class="content-section" aria-labelledby="voice-title">
-                <h2 id="voice-title">{{ t.vpTitle[currentLang] }}</h2>
-                <div role="group" tabindex="0" :aria-label="t.vp1[currentLang] + '. ' + t.vp2[currentLang] + '. ' + t.vp3[currentLang] + '. ' + t.vp4[currentLang] + '. ' + t.vp5[currentLang] + '. ' + t.vp6[currentLang]">
-                    <div aria-hidden="true">
-                        <ul>
-                            <li>{{ t.vp1[currentLang] }}</li>
-                            <li>{{ t.vp2[currentLang] }}</li>
-                            <li>{{ t.vp3[currentLang] }}</li>
-                            <li>{{ t.vp4[currentLang] }}</li>
-                            <li>{{ t.vp5[currentLang] }}</li>
-                            <li>{{ t.vp6[currentLang] }}</li>
-                        </ul>
-                    </div>
-                </div>
+                <h2 id="voice-title" tabindex="-1">{{ t.vpTitle[currentLang] }}</h2>
+                <ul>
+                    <li>{{ t.vp1[currentLang] }}</li>
+                    <li>{{ t.vp2[currentLang] }}</li>
+                    <li>{{ t.vp3[currentLang] }}</li>
+                    <li>{{ t.vp4[currentLang] }}</li>
+                    <li>{{ t.vp5[currentLang] }}</li>
+                    <li>{{ t.vp6[currentLang] }}</li>
+                </ul>
                 <button class="back-to-nav" @click="goToNav('voice')">{{ t.backToNav[currentLang] }}</button>
             </section>
 
             <!-- 5. 产品规格 -->
             <section id="specs" class="content-section" aria-labelledby="specs-title">
-                <h2 id="specs-title">{{ t.spTitle[currentLang] }}</h2>
-                <div role="group" tabindex="0" :aria-label="t.sp1[currentLang] + ': ' + t.sp1v[currentLang] + '. ' + t.sp2[currentLang] + ': ' + t.sp2v[currentLang] + '. ' + t.sp3[currentLang] + ': ' + t.sp3v[currentLang] + '. ' + t.sp4[currentLang] + ': ' + t.sp4v[currentLang] + '. ' + t.sp5[currentLang] + ': ' + t.sp5v[currentLang] + '. ' + t.sp6[currentLang] + ': ' + t.sp6v[currentLang]">
-                    <div aria-hidden="true">
-                        <ul>
-                            <li><strong>{{ t.sp1[currentLang] }}:</strong> {{ t.sp1v[currentLang] }}</li>
-                            <li><strong>{{ t.sp2[currentLang] }}:</strong> {{ t.sp2v[currentLang] }}</li>
-                            <li><strong>{{ t.sp3[currentLang] }}:</strong> {{ t.sp3v[currentLang] }}</li>
-                            <li><strong>{{ t.sp4[currentLang] }}:</strong> {{ t.sp4v[currentLang] }}</li>
-                            <li><strong>{{ t.sp5[currentLang] }}:</strong> {{ t.sp5v[currentLang] }}</li>
-                            <li><strong>{{ t.sp6[currentLang] }}:</strong> {{ t.sp6v[currentLang] }}</li>
-                        </ul>
-                    </div>
-                </div>
+                <h2 id="specs-title" tabindex="-1">{{ t.spTitle[currentLang] }}</h2>
+                <ul>
+                    <li><strong>{{ t.sp1[currentLang] }}:</strong> {{ t.sp1v[currentLang] }}</li>
+                    <li><strong>{{ t.sp2[currentLang] }}:</strong> {{ t.sp2v[currentLang] }}</li>
+                    <li><strong>{{ t.sp3[currentLang] }}:</strong> {{ t.sp3v[currentLang] }}</li>
+                    <li><strong>{{ t.sp4[currentLang] }}:</strong> {{ t.sp4v[currentLang] }}</li>
+                    <li><strong>{{ t.sp5[currentLang] }}:</strong> {{ t.sp5v[currentLang] }}</li>
+                    <li><strong>{{ t.sp6[currentLang] }}:</strong> {{ t.sp6v[currentLang] }}</li>
+                </ul>
                 <button class="back-to-nav" @click="goToNav('specs')">{{ t.backToNav[currentLang] }}</button>
             </section>
 
             <!-- 6. 常见问题 -->
             <section id="faq" class="content-section" aria-labelledby="faq-title">
-                <h2 id="faq-title">{{ t.fqTitle[currentLang] }}</h2>
-                <div role="group" tabindex="0" :aria-label="t.fqQ1[currentLang] + ' ' + t.fqA1[currentLang]">
-                    <div aria-hidden="true">
-                        <p><strong>{{ t.fqQ1[currentLang] }}</strong></p>
-                        <p>{{ t.fqA1[currentLang] }}</p>
-                    </div>
+                <h2 id="faq-title" tabindex="-1">{{ t.fqTitle[currentLang] }}</h2>
+                <div>
+                    <h3>{{ t.fqQ1[currentLang] }}</h3>
+                    <p>{{ t.fqA1[currentLang] }}</p>
                 </div>
-                <div role="group" tabindex="0" :aria-label="t.fqQ2[currentLang] + ' ' + t.fqA2[currentLang]">
-                    <div aria-hidden="true">
-                        <p><strong>{{ t.fqQ2[currentLang] }}</strong></p>
-                        <p>{{ t.fqA2[currentLang] }}</p>
-                    </div>
+                <div>
+                    <h3>{{ t.fqQ2[currentLang] }}</h3>
+                    <p>{{ t.fqA2[currentLang] }}</p>
                 </div>
-                <div role="group" tabindex="0" :aria-label="t.fqQ3[currentLang] + ' ' + t.fqA3[currentLang]">
-                    <div aria-hidden="true">
-                        <p><strong>{{ t.fqQ3[currentLang] }}</strong></p>
-                        <p>{{ t.fqA3[currentLang] }}</p>
-                    </div>
+                <div>
+                    <h3>{{ t.fqQ3[currentLang] }}</h3>
+                    <p>{{ t.fqA3[currentLang] }}</p>
                 </div>
                 <button class="back-to-nav" @click="goToNav('faq')">{{ t.backToNav[currentLang] }}</button>
             </section>
 
             <!-- 7. 我们期待您的反馈 (已修改为表单) -->
             <section id="feedback" class="content-section" aria-labelledby="feedback-title">
-                <h2 id="feedback-title">{{ t.fbTitle[currentLang] }}</h2>
+                <h2 id="feedback-title" tabindex="-1">{{ t.fbTitle[currentLang] }}</h2>
                 
                 <!-- 表单区域：增加无障碍标签关联 -->
                 <form class="fb-form" @submit.prevent="sendFeedback">
@@ -868,19 +827,24 @@
                     <div class="fb-field">
                         <label class="fb-label" for="fb-message">{{ t.fbMessageLabel[currentLang] }}</label>
                         <textarea
+                            ref="feedbackMessageRef"
                             id="fb-message"
                             class="fb-textarea"
                             v-model="feedbackForm.message"
                             rows="5"
+                            aria-required="true"
+                            :aria-invalid="feedbackError ? 'true' : undefined"
+                            :aria-describedby="feedbackError ? 'fb-error' : undefined"
                             :placeholder="t.fbD[currentLang]"
+                            @input="feedbackError = ''"
                         ></textarea>
                     </div>
 
-                    <p v-if="feedbackError" id="fb-error" class="fb-error" role="alert" aria-live="assertive" tabindex="-1">{{ feedbackError }}</p>
+                    <p v-if="feedbackError" id="fb-error" class="fb-error" role="alert">{{ feedbackError }}</p>
 
                     <button type="submit" class="nav-btn fb-submit">{{ t.fbSubmit[currentLang] }}</button>
 
-                    <p v-if="feedbackSent" class="fb-status" role="status" aria-live="polite">{{ t.fbSuccess[currentLang] }}</p>
+                    <p v-if="feedbackSent" class="fb-status" role="status">{{ t.fbSuccess[currentLang] }}</p>
                 </form>
 
                 <button class="back-to-nav" @click="goToNav('feedback')">{{ t.backToNav[currentLang] }}</button>
@@ -889,34 +853,23 @@
 
         <!-- 联系我们页脚（全宽） -->
         <footer class="contact-footer" id="contact" aria-labelledby="contact-title">
-            <h2 id="contact-title">{{ t.ctTitle[currentLang] }}</h2>
+            <h2 id="contact-title" tabindex="-1">{{ t.ctTitle[currentLang] }}</h2>
 
-            <p class="contact-link">
-                <a href="https://s.wujieqh.com/" target="_blank" rel="noopener noreferrer"
-                   :aria-label="t.ctWeb[currentLang] + ': https://s.wujieqh.com/'">
-                    <span aria-hidden="true">{{ t.ctWeb[currentLang] }}: https://s.wujieqh.com/</span>
-                </a>
-            </p>
+            <a class="contact-link" href="https://s.wujieqh.com/" target="_blank" rel="noopener noreferrer">
+                {{ t.ctWeb[currentLang] }}: https://s.wujieqh.com/
+            </a>
 
-            <p class="contact-link">
-                <a href="mailto:support@wujieqh.com"
-                   :aria-label="t.ctEmail[currentLang] + ': support@wujieqh.com'">
-                    <span aria-hidden="true">{{ t.ctEmail[currentLang] }}: support@wujieqh.com</span>
-                </a>
-            </p>
+            <a class="contact-link" href="mailto:support@wujieqh.com">
+                {{ t.ctEmail[currentLang] }}: support@wujieqh.com
+            </a>
 
-            <p class="contact-link">
-                <a :href="'tel:' + t.ctPhoneTel"
-                   :aria-label="t.ctPhone[currentLang] + ': ' + t.ctPhoneVal">
-                    <span aria-hidden="true">{{ t.ctPhone[currentLang] }}: {{ t.ctPhoneVal }}</span>
-                </a>
-            </p>
+            <a class="contact-link" :href="'tel:' + t.ctPhoneTel">
+                {{ t.ctPhone[currentLang] }}: {{ t.ctPhoneVal }}
+            </a>
 
-            <div role="group" tabindex="0" :aria-label="t.ctThanks[currentLang] + ' ' + t.ctCopy[currentLang]">
-                <div class="contact-footer-meta" aria-hidden="true">
-                    <p>{{ t.ctThanks[currentLang] }}</p>
-                    <p>{{ t.ctCopy[currentLang] }}</p>
-                </div>
+            <div class="contact-footer-meta">
+                <p>{{ t.ctThanks[currentLang] }}</p>
+                <p>{{ t.ctCopy[currentLang] }}</p>
             </div>
         </footer>
         </div>
@@ -934,13 +887,18 @@
                 // 移动端折叠导航状态
                 const mobileNavOpen = ref(false);
                 const navToggleRef = ref(null);
+                const pageTitleRef = ref(null);
+                const feedbackMessageRef = ref(null);
                 const windowWidth = ref(window.innerWidth);
 
-                function setLang(lang) {
+                function setLang(lang, moveFocus = true) {
                     currentLang.value = lang;
                     showLangModal.value = false;
                     applyPageLang(lang);
                     try { sessionStorage.setItem('lang', lang); } catch (e) { /* private browsing */ }
+                    if (moveFocus) {
+                        nextTick(() => pageTitleRef.value?.focus());
+                    }
                 }
 
                 // 快速切换语言
@@ -954,6 +912,9 @@
                 // 移动端：切换导航展开/折叠
                 function toggleMobileNav() {
                     const opening = !mobileNavOpen.value;
+                    if (!opening && isMobileNavCollapsed()) {
+                        navToggleRef.value?.focus({ preventScroll: true });
+                    }
                     mobileNavOpen.value = opening;
 
                     if (!isMobileNavCollapsed()) return;
@@ -961,20 +922,13 @@
                     nextTick(() => {
                         if (opening) {
                             waitForHeaderStable(() => navBtnRefs.value[0]?.focus());
-                        } else {
-                            navToggleRef.value?.focus();
                         }
                     });
                 }
 
-                // ESC / Tab 焦点陷阱（语言弹窗）
+                // Tab 焦点陷阱（语言为必选项，不允许无选择关闭）
                 function onKeydown(e) {
                     if (!showLangModal.value) return;
-
-                    if (e.key === 'Escape') {
-                        showLangModal.value = false;
-                        return;
-                    }
 
                     if (e.key === 'Tab') {
                         const btns = document.querySelectorAll('.lang-btn');
@@ -995,12 +949,9 @@
                 const t = {
                     pageTitle:            { en: 'XO Tactile Voice Power Bank',   zh: 'XO 触感语音充电宝' },
                     logoAlt:              { en: 'Product Logo',                    zh: '产品标志' },
-                    langModalAria:        { en: 'Language selection',              zh: '语言选择' },
-                    langModalPrompt:      { en: 'Please select your language',     zh: '请选择语言' },
                     skipLink:             { en: 'Skip to main content',            zh: '跳到主要内容' },
                     navAria:              { en: 'Main navigation',                 zh: '主导航' },
-                    mainAria:             { en: 'Main content',                    zh: '主要内容' },
-                    goTo:                 { en: 'Go to ',                          zh: '跳转到' },
+                    switchLang:           { en: 'English / 中文 — Switch language', zh: 'English / 中文 — 切换语言' },
                     overview:             { en: 'Product Overview',                zh: '产品概览' },
                     buttons:              { en: 'Button Functions',                zh: '按键功能' },
                     led:                  { en: 'Battery Indicator',               zh: '电池指示灯' },
@@ -1110,6 +1061,8 @@
                 );
 
                 let scrollLock = false;
+                let navReturnLock = false;
+                let navReturnSectionId = null;
                 let sectionObserver = null;
                 const sectionRatios = new Map();
                 let headerObserver = null;
@@ -1141,6 +1094,15 @@
 
                 function prefersReducedMotion() {
                     return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+                }
+
+                function onSkipLinkClick() {
+                    const main = document.getElementById('main-content');
+                    if (!main) return;
+
+                    main.focus({ preventScroll: true });
+                    const top = main.getBoundingClientRect().top + window.scrollY - getScrollOffset();
+                    scrollToY(top);
                 }
 
                 function scrollToY(top, onDone) {
@@ -1191,8 +1153,36 @@
                     });
                 }
 
+                function findNavLink(navBar, id) {
+                    if (!navBar || !id) return null;
+                    const target = `#${id}`;
+                    return [...navBar.querySelectorAll('a.nav-btn')].find(a => {
+                        return a.hash === target || a.getAttribute('href') === target;
+                    }) ?? null;
+                }
+
+                function focusNavLink(navBar, id) {
+                    const btn = findNavLink(navBar, id);
+                    activeSection.value = id;
+                    if (!btn) return null;
+
+                    navBar.querySelectorAll('.nav-btn--return-focus').forEach(el => {
+                        el.classList.remove('nav-btn--return-focus');
+                    });
+                    btn.classList.add('nav-btn--return-focus');
+                    btn.focus({ preventScroll: true });
+                    btn.addEventListener('blur', () => {
+                        btn.classList.remove('nav-btn--return-focus');
+                    }, { once: true });
+                    return btn;
+                }
+
                 function updateActiveFromObserver() {
                     if (scrollLock) return;
+                    if (navReturnLock) {
+                        if (navReturnSectionId) activeSection.value = navReturnSectionId;
+                        return;
+                    }
 
                     const scrollBottom = window.scrollY + window.innerHeight;
                     const pageBottom = document.documentElement.scrollHeight;
@@ -1225,7 +1215,7 @@
                     const headerH = getHeaderHeight();
                     sectionObserver = new IntersectionObserver(
                         (entries) => {
-                            if (scrollLock) return;
+                            if (scrollLock || navReturnLock) return;
                             for (const entry of entries) {
                                 sectionRatios.set(entry.target.id, entry.intersectionRatio);
                             }
@@ -1248,6 +1238,8 @@
                     const el = document.getElementById(id);
                     if (!el) return;
 
+                    navReturnLock = false;
+                    navReturnSectionId = null;
                     activeSection.value = id;
                     scrollLock = true;
 
@@ -1255,7 +1247,6 @@
                     scrollToY(top, () => {
                         const heading = el.querySelector('h2');
                         if (heading) {
-                            heading.setAttribute('tabindex', '-1');
                             heading.focus({ preventScroll: true });
                         }
                         scrollLock = false;
@@ -1265,6 +1256,7 @@
 
                 function onNavClick(id) {
                     if (isMobileNavCollapsed()) {
+                        document.getElementById(id)?.querySelector('h2')?.focus({ preventScroll: true });
                         mobileNavOpen.value = false;
                         waitForHeaderStable(() => scrollToSection(id));
                     } else {
@@ -1277,17 +1269,22 @@
                     const navBar = document.getElementById('main-nav');
                     if (!navBar) return;
 
-                    const idx = navItems.value.findIndex(item => item.id === id);
-                    if (idx < 0) return;
+                    if (navItems.value.findIndex(item => item.id === id) < 0) return;
+
+                    navReturnLock = true;
+                    navReturnSectionId = id;
+                    activeSection.value = id;
 
                     const scrollAndFocus = () => {
                         scrollLock = true;
-                        const top = navBar.getBoundingClientRect().top + window.scrollY - getScrollOffset();
+                        const top = getLayoutMode() === 'desktop'
+                            ? 0
+                            : navBar.getBoundingClientRect().top + window.scrollY - getScrollOffset();
                         scrollToY(top, () => {
-                            const btn = navBtnRefs.value[idx];
-                            btn?.focus();
+                            const applyFocus = () => focusNavLink(navBar, id);
+                            applyFocus();
                             scrollLock = false;
-                            updateActiveFromObserver();
+                            nextTick(applyFocus);
                         });
                     };
 
@@ -1303,6 +1300,15 @@
 
                 function onScrollBottomCheck() {
                     if (scrollLock) return;
+                    if (navReturnLock) {
+                        if (navReturnSectionId) activeSection.value = navReturnSectionId;
+                        if (window.scrollY > 150) {
+                            navReturnLock = false;
+                            navReturnSectionId = null;
+                        } else {
+                            return;
+                        }
+                    }
                     updateActiveFromObserver();
                 }
 
@@ -1321,7 +1327,7 @@
                     if (!message.trim()) {
                         feedbackError.value = t.fbError[currentLang.value];
                         feedbackSent.value = false;
-                        nextTick(() => document.getElementById('fb-error')?.focus());
+                        nextTick(() => feedbackMessageRef.value?.focus());
                         return;
                     }
 
@@ -1366,7 +1372,16 @@
                 }
 
                 function onResize() {
+                    const wasPhone = windowWidth.value <= BREAKPOINTS.phone;
                     windowWidth.value = window.innerWidth;
+                    const isPhone = windowWidth.value <= BREAKPOINTS.phone;
+
+                    if (!wasPhone && isPhone && !mobileNavOpen.value) {
+                        const navBar = document.getElementById('main-nav');
+                        if (navBar?.contains(document.activeElement)) {
+                            nextTick(() => navToggleRef.value?.focus({ preventScroll: true }));
+                        }
+                    }
                     alignLogo();
                     setupSectionObserver();
                 }
@@ -1376,7 +1391,7 @@
                     try { savedLang = sessionStorage.getItem('lang'); } catch (e) { /* private browsing */ }
 
                     if (savedLang === 'en' || savedLang === 'zh') {
-                        setLang(savedLang);
+                        setLang(savedLang, false);
                     } else {
                         applyPageLang(currentLang.value);
                     }
@@ -1428,10 +1443,10 @@
                 });
 
                 return { 
-                    navItems, activeSection, scrollToSection, goToNav, 
-                    showLangModal, currentLang, setLang, toggleLang, t, navBtnRefs,
+                    navItems, activeSection, scrollToSection, goToNav, onSkipLinkClick,
+                    showLangModal, currentLang, setLang, toggleLang, t, navBtnRefs, pageTitleRef,
                     mobileNavOpen, mobileNavA11yHidden, navToggleRef, toggleMobileNav, onNavClick,
-                    feedbackForm, feedbackSent, feedbackError, sendFeedback
+                    feedbackForm, feedbackSent, feedbackError, feedbackMessageRef, sendFeedback
                 };
             }
         }).mount('#app');
