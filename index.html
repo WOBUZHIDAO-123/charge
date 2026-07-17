@@ -196,6 +196,11 @@
             letter-spacing: 1px;
         }
 
+        .content-section h2:focus-visible {
+            outline: 4px solid #ffcc00;
+            outline-offset: 4px;
+        }
+
         .content-section h3 {
             font-size: 20px;
             color: #2d2d2d;
@@ -211,7 +216,8 @@
             margin-bottom: 10px;
         }
 
-        .readable-content:focus {
+        .readable-content:focus,
+        .readable-content:focus-visible {
             outline: 4px solid #ffcc00;
             outline-offset: 4px;
         }
@@ -720,7 +726,9 @@
         <main class="app-main" id="main-content" tabindex="-1">
             <!-- 1. 产品概览 -->
             <section id="overview" class="content-section" aria-labelledby="overview-title">
-                <h2 id="overview-title" tabindex="-1">{{ t.overview[currentLang] }}</h2>
+                <!-- 栏目标题：Tab 顺序第一站；点击导航后由脚本优先聚焦 -->
+                <h2 id="overview-title" tabindex="0">{{ t.overview[currentLang] }}</h2>
+                <!-- 栏目正文：从标题按 Tab 进入此块，再 Tab 进入「回到导航栏」 -->
                 <div class="readable-content" tabindex="0">
                     <p class="subtitle">{{ t.subTitle[currentLang] }}</p>
                     <h3>{{ t.frontView[currentLang] }}</h3>
@@ -735,7 +743,9 @@
 
             <!-- 2. 按键功能 -->
             <section id="buttons" class="content-section" aria-labelledby="buttons-title">
-                <h2 id="buttons-title" tabindex="-1">{{ t.btnTitle[currentLang] }}</h2>
+                <!-- 栏目标题：Tab 顺序第一站；点击导航后由脚本优先聚焦 -->
+                <h2 id="buttons-title" tabindex="0">{{ t.btnTitle[currentLang] }}</h2>
+                <!-- 栏目正文：从标题按 Tab 进入此块，再 Tab 进入「回到导航栏」 -->
                 <div class="readable-content" tabindex="0">
                     <ul>
                         <li><strong>{{ t.singleP[currentLang] }}:</strong> {{ t.singlePD[currentLang] }}</li>
@@ -748,7 +758,9 @@
 
             <!-- 3. 电池指示灯 -->
             <section id="led" class="content-section" aria-labelledby="led-title">
-                <h2 id="led-title" tabindex="-1">{{ t.pwrPrompt[currentLang] }}</h2>
+                <!-- 栏目标题：Tab 顺序第一站；点击导航后由脚本优先聚焦 -->
+                <h2 id="led-title" tabindex="0">{{ t.pwrPrompt[currentLang] }}</h2>
+                <!-- 栏目正文：从标题按 Tab 进入此块，再 Tab 进入「回到导航栏」 -->
                 <div class="readable-content" tabindex="0">
                     <p>{{ t.pwrPD[currentLang] }}</p>
                     <ul>
@@ -763,7 +775,9 @@
 
             <!-- 4. 语音提示 -->
             <section id="voice" class="content-section" aria-labelledby="voice-title">
-                <h2 id="voice-title" tabindex="-1">{{ t.vpTitle[currentLang] }}</h2>
+                <!-- 栏目标题：Tab 顺序第一站；点击导航后由脚本优先聚焦 -->
+                <h2 id="voice-title" tabindex="0">{{ t.vpTitle[currentLang] }}</h2>
+                <!-- 栏目正文：从标题按 Tab 进入此块，再 Tab 进入「回到导航栏」 -->
                 <div class="readable-content" tabindex="0">
                     <ul>
                         <li>{{ t.vp1[currentLang] }}</li>
@@ -779,7 +793,9 @@
 
             <!-- 5. 产品规格 -->
             <section id="specs" class="content-section" aria-labelledby="specs-title">
-                <h2 id="specs-title" tabindex="-1">{{ t.spTitle[currentLang] }}</h2>
+                <!-- 栏目标题：Tab 顺序第一站；点击导航后由脚本优先聚焦 -->
+                <h2 id="specs-title" tabindex="0">{{ t.spTitle[currentLang] }}</h2>
+                <!-- 栏目正文：从标题按 Tab 进入此块，再 Tab 进入「回到导航栏」 -->
                 <div class="readable-content" tabindex="0">
                     <ul>
                         <li><strong>{{ t.sp1[currentLang] }}:</strong> {{ t.sp1v[currentLang] }}</li>
@@ -795,7 +811,9 @@
 
             <!-- 6. 常见问题 -->
             <section id="faq" class="content-section" aria-labelledby="faq-title">
-                <h2 id="faq-title" tabindex="-1">{{ t.fqTitle[currentLang] }}</h2>
+                <!-- 栏目标题：Tab 顺序第一站；点击导航后由脚本优先聚焦 -->
+                <h2 id="faq-title" tabindex="0">{{ t.fqTitle[currentLang] }}</h2>
+                <!-- 栏目正文：从标题按 Tab 进入此块，再 Tab 进入「回到导航栏」 -->
                 <div class="readable-content" tabindex="0">
                     <div>
                         <h3>{{ t.fqQ1[currentLang] }}</h3>
@@ -1262,9 +1280,10 @@
 
                     const top = el.getBoundingClientRect().top + window.scrollY - getScrollOffset();
                     scrollToY(top, () => {
-                        const heading = el.querySelector('h2');
+                        const heading = document.getElementById(`${id}-title`);
                         if (heading) {
                             heading.focus({ preventScroll: true });
+                            nextTick(() => heading.focus({ preventScroll: true }));
                         }
                         scrollLock = false;
                         updateActiveFromObserver();
@@ -1273,7 +1292,7 @@
 
                 function onNavClick(id) {
                     if (isMobileNavCollapsed()) {
-                        document.getElementById(id)?.querySelector('h2')?.focus({ preventScroll: true });
+                        document.getElementById(`${id}-title`)?.focus({ preventScroll: true });
                         mobileNavOpen.value = false;
                         waitForHeaderStable(() => scrollToSection(id));
                     } else {
