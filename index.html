@@ -102,9 +102,6 @@
 
         .nav-btn {
             /* 大按钮，方便盲人触碰 */
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
             min-height: 56px;
             min-width: 130px;
             padding: 14px 22px;
@@ -119,7 +116,6 @@
             user-select: none;
             -webkit-tap-highlight-color: transparent;
             white-space: nowrap;
-            text-decoration: none;
             /* 关键：移除默认 outline，用 box-shadow 或 border 替代，或者保留 outline 但美化它 */
             outline: none; 
         }
@@ -132,8 +128,9 @@
             transform: scale(0.96);
         }
 
-        /* 【修复点1】增强焦点可见性 */
-        .nav-btn:focus-visible {
+        /* 【修复点1】增强焦点可见性：无论是键盘还是脚本 focus，都显示明显边框 */
+        .nav-btn:focus-visible,
+        .nav-btn:focus {
             outline: 4px solid #ffcc00; /* 高对比度黄色 */
             outline-offset: 2px;
             z-index: 10; /* 确保焦点框在最上层 */
@@ -147,12 +144,6 @@
             border: 3px solid #003366;
             box-shadow: 0 0 0 3px #003366;
             font-weight: 700;
-        }
-
-        /* 返回导航时脚本聚焦的高亮（:focus-visible 对程序化 focus 不生效） */
-        .nav-btn--return-focus {
-            outline: 4px solid #ffcc00;
-            outline-offset: 2px;
         }
 
         /* 导航栏内的语言切换按钮 */
@@ -212,8 +203,8 @@
         }
 
         .content-section ul {
-            list-style: disc;
-            padding-inline-start: 28px;
+            list-style: none;
+            padding-left: 0;
             margin-bottom: 12px;
         }
 
@@ -221,7 +212,17 @@
             font-size: 18px;
             color: #333;
             line-height: 1.8;
+            padding-left: 24px;
+            position: relative;
             margin-bottom: 6px;
+        }
+
+        .content-section li::before {
+            content: "·";
+            position: absolute;
+            left: 8px;
+            font-weight: bold;
+            color: #2d2d2d;
         }
 
         .content-section .subtitle {
@@ -230,62 +231,6 @@
             margin-bottom: 0;
             line-height: 1.6;
             font-style: italic;
-        }
-
-        /* ========== 反馈表单 ========== */
-        .fb-form {
-            margin-top: 20px;
-        }
-        .fb-field {
-            margin-bottom: 16px;
-        }
-        .fb-field:last-of-type {
-            margin-bottom: 24px;
-        }
-        .fb-label {
-            display: block;
-            font-size: 18px;
-            font-weight: 600;
-            margin-bottom: 6px;
-            color: #333;
-        }
-        .fb-input,
-        .fb-textarea {
-            width: 100%;
-            padding: 12px 16px;
-            font-size: 18px;
-            border: 2px solid #e0dcd4;
-            border-radius: 4px;
-            outline: none;
-            font-family: inherit;
-        }
-        .fb-textarea {
-            resize: vertical;
-            line-height: 1.6;
-        }
-        .fb-input:focus-visible,
-        .fb-textarea:focus-visible {
-            border-color: #003366;
-            outline: 4px solid #ffcc00;
-            outline-offset: 2px;
-        }
-        .fb-submit {
-            min-width: 200px;
-            background: #003366;
-            color: #FFFFF0;
-            border-color: #003366;
-        }
-        .fb-error {
-            margin-top: 12px;
-            color: #c00;
-            font-weight: 600;
-            font-size: 16px;
-        }
-        .fb-status {
-            margin-top: 12px;
-            color: green;
-            font-weight: 600;
-            font-size: 16px;
         }
 
         /* ========== 联系我们页脚 ========== */
@@ -316,19 +261,19 @@
             text-decoration: underline;
         }
 
-        .contact-footer .contact-link {
-            display: flex;
-            align-items: center;
-            justify-content: center;
+        /* 三个联系项各自独立容器 */
+        .contact-item {
             margin: 0 auto;
             max-width: 400px;
-            min-height: 44px;
             padding: 12px 16px;
             border-radius: 6px;
-            color: #fff;
-            text-decoration: underline;
+            transition: background 0.15s;
+            cursor: default;
         }
-        .contact-footer .contact-link:focus-visible {
+        .contact-item:hover {
+            background: rgba(255,255,255,0.06);
+        }
+        .contact-item:focus-visible {
             outline: 4px solid #ffcc00;
             outline-offset: 2px;
         }
@@ -402,7 +347,7 @@
             border-left: 6px solid #003366;
         }
 
-        .lang-modal h2 {
+        .lang-modal p {
             font-size: 22px;
             color: #1a1a1a;
             margin-bottom: 32px;
@@ -599,7 +544,7 @@
             }
             .nav-btn {
                 font-size: 14px;
-                min-height: 44px;
+                min-height: 42px;
                 padding: 8px 10px;
             }
             .content-section {
@@ -619,7 +564,7 @@
             .lang-modal {
                 padding: 32px 24px 28px;
             }
-            .lang-modal h2 {
+            .lang-modal p {
                 font-size: 18px;
             }
             .lang-btn {
@@ -631,7 +576,7 @@
             .back-to-nav {
                 font-size: 14px;
                 padding: 8px 14px;
-                min-height: 44px;
+                min-height: 38px;
             }
             .contact-footer {
                 padding: 28px 16px;
@@ -646,30 +591,26 @@
 <body>
     <div id="app">
         <!-- 语言选择弹窗 -->
-        <div v-if="showLangModal" class="lang-overlay">
-            <div class="lang-modal" role="dialog" aria-modal="true" aria-labelledby="language-dialog-title">
-                <h2 id="language-dialog-title">
-                    <span lang="en">Please select your language</span><br>
-                    <span lang="zh-CN">请选择语言</span>
-                </h2>
+        <div v-if="showLangModal" class="lang-overlay" role="dialog" aria-modal="true" aria-label="Language selection">
+            <div class="lang-modal">
+                <p>Please select<br>请选择语言</p>
                 <div class="lang-btn-group">
-                    <button type="button" class="lang-btn" lang="en" @click="setLang('en')">English</button>
-                    <button type="button" class="lang-btn" lang="zh-CN" @click="setLang('zh')">中文</button>
+                    <button class="lang-btn" @click="setLang('en')">English</button>
+                    <button class="lang-btn" @click="setLang('zh')">中文</button>
                 </div>
             </div>
         </div>
 
-        <div :inert="showLangModal" :aria-hidden="showLangModal ? 'true' : null">
         <!-- 无障碍跳过链接 -->
-        <a href="#main-content" class="skip-link" @click.prevent="onSkipLinkClick">{{ t.skipLink[currentLang] }}</a>
+        <a href="#main-content" class="skip-link">{{ t.skipLink[currentLang] }}</a>
 
         <!-- 头部 + 导航栏 -->
         <header class="app-header">
             <div class="header-top">
                 <div class="header-logo-wrap">
-                    <img src="product-logo.png" :alt="t.logoAlt[currentLang]">
+                    <img src="product-logo.png" alt="Product Logo">
                 </div>
-                <h1 ref="pageTitleRef" tabindex="-1">{{ t.pageTitle[currentLang] }}</h1>
+                <h1>{{ t.pageTitle[currentLang] }}</h1>
             </div>
             <!-- 移动端折叠导航按钮 -->
             <button
@@ -690,32 +631,31 @@
                  :aria-label="t.navAria[currentLang]"
                  :aria-hidden="mobileNavA11yHidden ? true : null"
                  :inert="mobileNavA11yHidden ? true : null">
-                <a
+                <button
                     v-for="(item, index) in navItems"
                     :key="item.id"
                     ref="navBtnRefs"
-                    :href="'#' + item.id"
                     class="nav-btn"
                     :class="{ 'nav-btn--active': activeSection === item.id }"
-                    :aria-current="activeSection === item.id ? 'location' : undefined"
-                    @click.prevent="onNavClick(item.id)"
-                >{{ item.label }}</a>
+                    :aria-current="activeSection === item.id ? 'true' : undefined"
+                    :aria-label="t.goTo[currentLang] + item.label"
+                    @click="onNavClick(item.id)"
+                >{{ item.label }}</button>
 
                     <!-- 快速语言切换按钮 -->
                     <button
-                        type="button"
                         class="nav-btn lang-toggle-btn"
                         @click="toggleLang"
-                        :aria-label="t.switchLang[currentLang]"
+                        :aria-label="'Switch Language / 切换语言'"
                     >English / 中文</button>
             </nav>
         </header>
 
         <!-- 主内容区 -->
-        <main class="app-main" id="main-content" tabindex="-1">
+        <main class="app-main" id="main-content" :aria-label="t.mainAria[currentLang]">
             <!-- 1. 产品概览 -->
             <section id="overview" class="content-section" aria-labelledby="overview-title">
-                <h2 id="overview-title" tabindex="-1">{{ t.overview[currentLang] }}</h2>
+                <h2 id="overview-title">{{ t.overview[currentLang] }}</h2>
                 <p class="subtitle">{{ t.subTitle[currentLang] }}</p>
                 <h3>{{ t.frontView[currentLang] }}</h3>
                 <p>{{ t.frontVD[currentLang] }}</p>
@@ -728,7 +668,7 @@
 
             <!-- 2. 按键功能 -->
             <section id="buttons" class="content-section" aria-labelledby="buttons-title">
-                <h2 id="buttons-title" tabindex="-1">{{ t.btnTitle[currentLang] }}</h2>
+                <h2 id="buttons-title">{{ t.btnTitle[currentLang] }}</h2>
                 <ul>
                     <li><strong>{{ t.singleP[currentLang] }}:</strong> {{ t.singlePD[currentLang] }}</li>
                     <li><strong>{{ t.doubleP[currentLang] }}:</strong> {{ t.doublePD[currentLang] }}</li>
@@ -739,7 +679,7 @@
 
             <!-- 3. 电池指示灯 -->
             <section id="led" class="content-section" aria-labelledby="led-title">
-                <h2 id="led-title" tabindex="-1">{{ t.pwrPrompt[currentLang] }}</h2>
+                <h2 id="led-title">{{ t.pwrPrompt[currentLang] }}</h2>
                 <p>{{ t.pwrPD[currentLang] }}</p>
                 <ul>
                     <li><strong>{{ t.pwrLabel1[currentLang] }}:</strong> {{ t.pwr1[currentLang] }}</li>
@@ -752,7 +692,7 @@
 
             <!-- 4. 语音提示 -->
             <section id="voice" class="content-section" aria-labelledby="voice-title">
-                <h2 id="voice-title" tabindex="-1">{{ t.vpTitle[currentLang] }}</h2>
+                <h2 id="voice-title">{{ t.vpTitle[currentLang] }}</h2>
                 <ul>
                     <li>{{ t.vp1[currentLang] }}</li>
                     <li>{{ t.vp2[currentLang] }}</li>
@@ -766,7 +706,7 @@
 
             <!-- 5. 产品规格 -->
             <section id="specs" class="content-section" aria-labelledby="specs-title">
-                <h2 id="specs-title" tabindex="-1">{{ t.spTitle[currentLang] }}</h2>
+                <h2 id="specs-title">{{ t.spTitle[currentLang] }}</h2>
                 <ul>
                     <li><strong>{{ t.sp1[currentLang] }}:</strong> {{ t.sp1v[currentLang] }}</li>
                     <li><strong>{{ t.sp2[currentLang] }}:</strong> {{ t.sp2v[currentLang] }}</li>
@@ -780,71 +720,78 @@
 
             <!-- 6. 常见问题 -->
             <section id="faq" class="content-section" aria-labelledby="faq-title">
-                <h2 id="faq-title" tabindex="-1">{{ t.fqTitle[currentLang] }}</h2>
-                <div>
-                    <h3>{{ t.fqQ1[currentLang] }}</h3>
-                    <p>{{ t.fqA1[currentLang] }}</p>
-                </div>
-                <div>
-                    <h3>{{ t.fqQ2[currentLang] }}</h3>
-                    <p>{{ t.fqA2[currentLang] }}</p>
-                </div>
-                <div>
-                    <h3>{{ t.fqQ3[currentLang] }}</h3>
-                    <p>{{ t.fqA3[currentLang] }}</p>
-                </div>
+                <h2 id="faq-title">{{ t.fqTitle[currentLang] }}</h2>
+                <p><strong>{{ t.fqQ1[currentLang] }}</strong></p>
+                <p>{{ t.fqA1[currentLang] }}</p>
+                <p><strong>{{ t.fqQ2[currentLang] }}</strong></p>
+                <p>{{ t.fqA2[currentLang] }}</p>
+                <p><strong>{{ t.fqQ3[currentLang] }}</strong></p>
+                <p>{{ t.fqA3[currentLang] }}</p>
                 <button class="back-to-nav" @click="goToNav('faq')">{{ t.backToNav[currentLang] }}</button>
             </section>
 
             <!-- 7. 我们期待您的反馈 (已修改为表单) -->
             <section id="feedback" class="content-section" aria-labelledby="feedback-title">
-                <h2 id="feedback-title" tabindex="-1">{{ t.fbTitle[currentLang] }}</h2>
+                <h2 id="feedback-title">{{ t.fbTitle[currentLang] }}</h2>
                 
                 <!-- 表单区域：增加无障碍标签关联 -->
-                <form class="fb-form" @submit.prevent="sendFeedback">
-                    <div class="fb-field">
-                        <label class="fb-label" for="fb-name">{{ t.fbNameLabel[currentLang] }}</label>
-                        <input
-                            type="text"
-                            id="fb-name"
-                            class="fb-input"
-                            v-model="feedbackForm.name"
-                            :placeholder="t.fbNamePlaceholder[currentLang]"
+                <form @submit.prevent="sendFeedback" style="margin-top: 20px;">
+                    <div style="margin-bottom: 16px;">
+                        <label for="fb-name" style="display:block; font-size:18px; font-weight:600; margin-bottom:6px; color:#333;">
+                            {{ currentLang === 'zh' ? '您的称呼' : 'Your Name' }}
+                        </label>
+                        <input 
+                            type="text" 
+                            id="fb-name" 
+                            v-model="feedbackForm.name" 
+                            :placeholder="currentLang === 'zh' ? '请输入您的姓名或昵称' : 'Enter your name or nickname'"
+                            style="width:100%; padding:12px 16px; font-size:18px; border:2px solid #e0dcd4; border-radius:4px; outline:none;"
+                            @focus="$event.target.style.borderColor='#003366'"
+                            @blur="$event.target.style.borderColor='#e0dcd4'"
                         >
                     </div>
 
-                    <div class="fb-field">
-                        <label class="fb-label" for="fb-email">{{ t.fbEmailLabel[currentLang] }}</label>
-                        <input
-                            type="email"
-                            id="fb-email"
-                            class="fb-input"
-                            v-model="feedbackForm.email"
-                            :placeholder="t.fbEmailPlaceholder[currentLang]"
+                    <div style="margin-bottom: 16px;">
+                        <label for="fb-email" style="display:block; font-size:18px; font-weight:600; margin-bottom:6px; color:#333;">
+                            {{ currentLang === 'zh' ? '电子邮箱' : 'Email Address' }}
+                        </label>
+                        <input 
+                            type="email" 
+                            id="fb-email" 
+                            v-model="feedbackForm.email" 
+                            :placeholder="currentLang === 'zh' ? 'example@mail.com' : 'example@mail.com'"
+                            style="width:100%; padding:12px 16px; font-size:18px; border:2px solid #e0dcd4; border-radius:4px; outline:none;"
+                            @focus="$event.target.style.borderColor='#003366'"
+                            @blur="$event.target.style.borderColor='#e0dcd4'"
                         >
                     </div>
 
-                    <div class="fb-field">
-                        <label class="fb-label" for="fb-message">{{ t.fbMessageLabel[currentLang] }}</label>
-                        <textarea
-                            ref="feedbackMessageRef"
-                            id="fb-message"
-                            class="fb-textarea"
-                            v-model="feedbackForm.message"
+                    <div style="margin-bottom: 24px;">
+                        <label for="fb-message" style="display:block; font-size:18px; font-weight:600; margin-bottom:6px; color:#333;">
+                            {{ currentLang === 'zh' ? '留言内容' : 'Your Message' }}
+                        </label>
+                        <textarea 
+                            id="fb-message" 
+                            v-model="feedbackForm.message" 
                             rows="5"
-                            aria-required="true"
-                            :aria-invalid="feedbackError ? 'true' : undefined"
-                            :aria-describedby="feedbackError ? 'fb-error' : undefined"
                             :placeholder="t.fbD[currentLang]"
-                            @input="feedbackError = ''"
+                            style="width:100%; padding:12px 16px; font-size:18px; border:2px solid #e0dcd4; border-radius:4px; outline:none; resize:vertical; line-height:1.6;"
+                            @focus="$event.target.style.borderColor='#003366'"
+                            @blur="$event.target.style.borderColor='#e0dcd4'"
                         ></textarea>
                     </div>
 
-                    <p v-if="feedbackError" id="fb-error" class="fb-error" role="alert">{{ feedbackError }}</p>
-
-                    <button type="submit" class="nav-btn fb-submit">{{ t.fbSubmit[currentLang] }}</button>
-
-                    <p v-if="feedbackSent" class="fb-status" role="status">{{ t.fbSuccess[currentLang] }}</p>
+                    <button 
+                        type="submit" 
+                        class="nav-btn" 
+                        style="min-width:200px; background:#003366; color:#FFFFF0; border-color:#003366;"
+                    >
+                        {{ currentLang === 'zh' ? '发送留言' : 'Send Feedback' }}
+                    </button>
+                    
+                    <p v-if="feedbackSent" style="margin-top:12px; color:green; font-weight:600; font-size:16px;" role="status">
+                        {{ currentLang === 'zh' ? '✓ 已唤起邮件客户端，请确认发送' : '✓ Email client opened, please confirm to send' }}
+                    </p>
                 </form>
 
                 <button class="back-to-nav" @click="goToNav('feedback')">{{ t.backToNav[currentLang] }}</button>
@@ -853,26 +800,29 @@
 
         <!-- 联系我们页脚（全宽） -->
         <footer class="contact-footer" id="contact" aria-labelledby="contact-title">
-            <h2 id="contact-title" tabindex="-1">{{ t.ctTitle[currentLang] }}</h2>
+            <h2 id="contact-title">{{ t.ctTitle[currentLang] }}</h2>
 
-            <a class="contact-link" href="https://s.wujieqh.com/" target="_blank" rel="noopener noreferrer">
-                {{ t.ctWeb[currentLang] }}: https://s.wujieqh.com/
-            </a>
+            <!-- 官方网站 -->
+            <div class="contact-item">
+                <p><strong>{{ t.ctWeb[currentLang] }}:</strong> <a href="https://s.wujieqh.com/" target="_blank" rel="noopener noreferrer">https://s.wujieqh.com/</a></p>
+            </div>
 
-            <a class="contact-link" href="mailto:support@wujieqh.com">
-                {{ t.ctEmail[currentLang] }}: support@wujieqh.com
-            </a>
+            <!-- 电子邮箱 -->
+            <div class="contact-item">
+                <p><strong>{{ t.ctEmail[currentLang] }}:</strong> <a href="mailto:support@wujieqh.com">support@wujieqh.com</a></p>
+            </div>
 
-            <a class="contact-link" :href="'tel:' + t.ctPhoneTel">
-                {{ t.ctPhone[currentLang] }}: {{ t.ctPhoneVal }}
-            </a>
+            <!-- 电话联系 -->
+            <div class="contact-item">
+                <p><strong>{{ t.ctPhone[currentLang] }}:</strong> <a :href="'tel:' + t.ctPhoneTel">{{ t.ctPhoneVal }}</a></p>
+            </div>
 
+            <!-- 感谢与版权 -->
             <div class="contact-footer-meta">
                 <p>{{ t.ctThanks[currentLang] }}</p>
                 <p>{{ t.ctCopy[currentLang] }}</p>
             </div>
         </footer>
-        </div>
     </div>
 
     <script>
@@ -887,18 +837,12 @@
                 // 移动端折叠导航状态
                 const mobileNavOpen = ref(false);
                 const navToggleRef = ref(null);
-                const pageTitleRef = ref(null);
-                const feedbackMessageRef = ref(null);
                 const windowWidth = ref(window.innerWidth);
 
-                function setLang(lang, moveFocus = true) {
+                function setLang(lang) {
                     currentLang.value = lang;
                     showLangModal.value = false;
                     applyPageLang(lang);
-                    try { sessionStorage.setItem('lang', lang); } catch (e) { /* private browsing */ }
-                    if (moveFocus) {
-                        nextTick(() => pageTitleRef.value?.focus());
-                    }
                 }
 
                 // 快速切换语言
@@ -906,15 +850,11 @@
                     const lang = currentLang.value === 'en' ? 'zh' : 'en';
                     currentLang.value = lang;
                     applyPageLang(lang);
-                    try { sessionStorage.setItem('lang', lang); } catch (e) { /* private browsing */ }
                 }
 
                 // 移动端：切换导航展开/折叠
                 function toggleMobileNav() {
                     const opening = !mobileNavOpen.value;
-                    if (!opening && isMobileNavCollapsed()) {
-                        navToggleRef.value?.focus({ preventScroll: true });
-                    }
                     mobileNavOpen.value = opening;
 
                     if (!isMobileNavCollapsed()) return;
@@ -922,36 +862,26 @@
                     nextTick(() => {
                         if (opening) {
                             waitForHeaderStable(() => navBtnRefs.value[0]?.focus());
+                        } else {
+                            navToggleRef.value?.focus();
                         }
                     });
                 }
 
-                // Tab 焦点陷阱（语言为必选项，不允许无选择关闭）
+                // ESC 关闭弹窗
                 function onKeydown(e) {
-                    if (!showLangModal.value) return;
-
-                    if (e.key === 'Tab') {
-                        const btns = document.querySelectorAll('.lang-btn');
-                        if (btns.length < 2) return;
-                        const first = btns[0];
-                        const last = btns[btns.length - 1];
-                        if (e.shiftKey && document.activeElement === first) {
-                            e.preventDefault();
-                            last.focus();
-                        } else if (!e.shiftKey && document.activeElement === last) {
-                            e.preventDefault();
-                            first.focus();
-                        }
+                    if (e.key === 'Escape' && showLangModal.value) {
+                        showLangModal.value = false;
                     }
                 }
 
                 // 双语翻译数据
                 const t = {
                     pageTitle:            { en: 'XO Tactile Voice Power Bank',   zh: 'XO 触感语音充电宝' },
-                    logoAlt:              { en: 'Product Logo',                    zh: '产品标志' },
                     skipLink:             { en: 'Skip to main content',            zh: '跳到主要内容' },
                     navAria:              { en: 'Main navigation',                 zh: '主导航' },
-                    switchLang:           { en: 'English / 中文 — Switch language', zh: 'English / 中文 — 切换语言' },
+                    mainAria:             { en: 'Main content',                    zh: '主要内容' },
+                    goTo:                 { en: 'Go to ',                          zh: '跳转到' },
                     overview:             { en: 'Product Overview',                zh: '产品概览' },
                     buttons:              { en: 'Button Functions',                zh: '按键功能' },
                     led:                  { en: 'Battery Indicator',               zh: '电池指示灯' },
@@ -1018,14 +948,6 @@
                     fqA3:      { en: 'Yes, this product is 3C certified and can be taken on planes, trains, etc.', zh: '产品已通过3C认证，可以带上飞机、火车等场所。' },
                     fbTitle:   { en: 'We\'d Love Your Feedback', zh: '我们期待您的反馈' },
                     fbD:       { en: 'Please share your feedback on the packaging, tactile design, voice prompts, and overall experience.', zh: '请分享您对包装、触觉设计、语音提示和整体体验的反馈意见。' },
-                    fbNameLabel:       { en: 'Your Name', zh: '您的称呼' },
-                    fbEmailLabel:      { en: 'Email Address', zh: '电子邮箱' },
-                    fbMessageLabel:    { en: 'Your Message', zh: '留言内容' },
-                    fbNamePlaceholder: { en: 'Enter your name or nickname', zh: '请输入您的姓名或昵称' },
-                    fbEmailPlaceholder:{ en: 'example@mail.com', zh: 'example@mail.com' },
-                    fbSubmit:          { en: 'Send Feedback', zh: '发送留言' },
-                    fbError:           { en: 'Please enter your message', zh: '请填写留言内容' },
-                    fbSuccess:         { en: 'Email client opened, please confirm to send', zh: '已唤起邮件客户端，请确认发送' },
                     ctTitle:   { en: 'Contact Us', zh: '联系我们' },
                     ctWeb:     { en: 'Website', zh: '官方网站' },
                     ctEmail:   { en: 'Email', zh: '电子邮箱' },
@@ -1061,8 +983,6 @@
                 );
 
                 let scrollLock = false;
-                let navReturnLock = false;
-                let navReturnSectionId = null;
                 let sectionObserver = null;
                 const sectionRatios = new Map();
                 let headerObserver = null;
@@ -1094,15 +1014,6 @@
 
                 function prefersReducedMotion() {
                     return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-                }
-
-                function onSkipLinkClick() {
-                    const main = document.getElementById('main-content');
-                    if (!main) return;
-
-                    main.focus({ preventScroll: true });
-                    const top = main.getBoundingClientRect().top + window.scrollY - getScrollOffset();
-                    scrollToY(top);
                 }
 
                 function scrollToY(top, onDone) {
@@ -1153,36 +1064,8 @@
                     });
                 }
 
-                function findNavLink(navBar, id) {
-                    if (!navBar || !id) return null;
-                    const target = `#${id}`;
-                    return [...navBar.querySelectorAll('a.nav-btn')].find(a => {
-                        return a.hash === target || a.getAttribute('href') === target;
-                    }) ?? null;
-                }
-
-                function focusNavLink(navBar, id) {
-                    const btn = findNavLink(navBar, id);
-                    activeSection.value = id;
-                    if (!btn) return null;
-
-                    navBar.querySelectorAll('.nav-btn--return-focus').forEach(el => {
-                        el.classList.remove('nav-btn--return-focus');
-                    });
-                    btn.classList.add('nav-btn--return-focus');
-                    btn.focus({ preventScroll: true });
-                    btn.addEventListener('blur', () => {
-                        btn.classList.remove('nav-btn--return-focus');
-                    }, { once: true });
-                    return btn;
-                }
-
                 function updateActiveFromObserver() {
                     if (scrollLock) return;
-                    if (navReturnLock) {
-                        if (navReturnSectionId) activeSection.value = navReturnSectionId;
-                        return;
-                    }
 
                     const scrollBottom = window.scrollY + window.innerHeight;
                     const pageBottom = document.documentElement.scrollHeight;
@@ -1215,7 +1098,7 @@
                     const headerH = getHeaderHeight();
                     sectionObserver = new IntersectionObserver(
                         (entries) => {
-                            if (scrollLock || navReturnLock) return;
+                            if (scrollLock) return;
                             for (const entry of entries) {
                                 sectionRatios.set(entry.target.id, entry.intersectionRatio);
                             }
@@ -1238,8 +1121,6 @@
                     const el = document.getElementById(id);
                     if (!el) return;
 
-                    navReturnLock = false;
-                    navReturnSectionId = null;
                     activeSection.value = id;
                     scrollLock = true;
 
@@ -1247,6 +1128,7 @@
                     scrollToY(top, () => {
                         const heading = el.querySelector('h2');
                         if (heading) {
+                            heading.setAttribute('tabindex', '-1');
                             heading.focus({ preventScroll: true });
                         }
                         scrollLock = false;
@@ -1256,7 +1138,6 @@
 
                 function onNavClick(id) {
                     if (isMobileNavCollapsed()) {
-                        document.getElementById(id)?.querySelector('h2')?.focus({ preventScroll: true });
                         mobileNavOpen.value = false;
                         waitForHeaderStable(() => scrollToSection(id));
                     } else {
@@ -1269,22 +1150,17 @@
                     const navBar = document.getElementById('main-nav');
                     if (!navBar) return;
 
-                    if (navItems.value.findIndex(item => item.id === id) < 0) return;
-
-                    navReturnLock = true;
-                    navReturnSectionId = id;
-                    activeSection.value = id;
+                    const idx = navItems.value.findIndex(item => item.id === id);
+                    if (idx < 0) return;
 
                     const scrollAndFocus = () => {
                         scrollLock = true;
-                        const top = getLayoutMode() === 'desktop'
-                            ? 0
-                            : navBar.getBoundingClientRect().top + window.scrollY - getScrollOffset();
+                        const top = navBar.getBoundingClientRect().top + window.scrollY - getScrollOffset();
                         scrollToY(top, () => {
-                            const applyFocus = () => focusNavLink(navBar, id);
-                            applyFocus();
+                            const btn = navBtnRefs.value[idx];
+                            btn?.focus();
                             scrollLock = false;
-                            nextTick(applyFocus);
+                            updateActiveFromObserver();
                         });
                     };
 
@@ -1300,15 +1176,6 @@
 
                 function onScrollBottomCheck() {
                     if (scrollLock) return;
-                    if (navReturnLock) {
-                        if (navReturnSectionId) activeSection.value = navReturnSectionId;
-                        if (window.scrollY > 150) {
-                            navReturnLock = false;
-                            navReturnSectionId = null;
-                        } else {
-                            return;
-                        }
-                    }
                     updateActiveFromObserver();
                 }
 
@@ -1319,19 +1186,16 @@
                     message: ''
                 });
                 const feedbackSent = ref(false);
-                const feedbackError = ref('');
 
                 function sendFeedback() {
                     const { name, email, message } = feedbackForm.value;
-
+                    
+                    // 基础校验
                     if (!message.trim()) {
-                        feedbackError.value = t.fbError[currentLang.value];
-                        feedbackSent.value = false;
-                        nextTick(() => feedbackMessageRef.value?.focus());
+                        alert(currentLang.value === 'zh' ? '请填写留言内容' : 'Please enter your message');
                         return;
                     }
 
-                    feedbackError.value = '';
                     // 构建邮件主题和正文
                     const subject = encodeURIComponent(
                         currentLang.value === 'zh' 
@@ -1372,37 +1236,21 @@
                 }
 
                 function onResize() {
-                    const wasPhone = windowWidth.value <= BREAKPOINTS.phone;
                     windowWidth.value = window.innerWidth;
-                    const isPhone = windowWidth.value <= BREAKPOINTS.phone;
-
-                    if (!wasPhone && isPhone && !mobileNavOpen.value) {
-                        const navBar = document.getElementById('main-nav');
-                        if (navBar?.contains(document.activeElement)) {
-                            nextTick(() => navToggleRef.value?.focus({ preventScroll: true }));
-                        }
-                    }
                     alignLogo();
                     setupSectionObserver();
                 }
 
                 onMounted(() => {
-                    let savedLang = null;
-                    try { savedLang = sessionStorage.getItem('lang'); } catch (e) { /* private browsing */ }
-
-                    if (savedLang === 'en' || savedLang === 'zh') {
-                        setLang(savedLang, false);
-                    } else {
-                        applyPageLang(currentLang.value);
-                    }
-
+                    applyPageLang(currentLang.value);
                     window.addEventListener('keydown', onKeydown);
                     window.addEventListener('scroll', onScrollBottomCheck, { passive: true });
                     window.addEventListener('resize', onResize);
 
                     if (showLangModal.value) {
                         nextTick(() => {
-                            document.querySelector('.lang-btn')?.focus();
+                            const firstBtn = document.querySelector('.lang-btn');
+                            firstBtn?.focus();
                         });
                     }
 
@@ -1443,10 +1291,10 @@
                 });
 
                 return { 
-                    navItems, activeSection, scrollToSection, goToNav, onSkipLinkClick,
-                    showLangModal, currentLang, setLang, toggleLang, t, navBtnRefs, pageTitleRef,
+                    navItems, activeSection, scrollToSection, goToNav, 
+                    showLangModal, currentLang, setLang, toggleLang, t, navBtnRefs,
                     mobileNavOpen, mobileNavA11yHidden, navToggleRef, toggleMobileNav, onNavClick,
-                    feedbackForm, feedbackSent, feedbackError, feedbackMessageRef, sendFeedback
+                    feedbackForm, feedbackSent, sendFeedback
                 };
             }
         }).mount('#app');
