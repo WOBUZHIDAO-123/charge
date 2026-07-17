@@ -132,11 +132,17 @@
             transform: scale(0.96);
         }
 
-        /* 【修复点1】增强焦点可见性 */
-        .nav-btn:focus-visible {
-            outline: 4px solid #ffcc00; /* 高对比度黄色 */
+        /* 统一焦点环 */
+        :focus-visible,
+        .readable-content:focus,
+        .contact-item:focus,
+        .nav-btn--return-focus {
+            outline: 4px solid #ffcc00;
             outline-offset: 2px;
-            z-index: 10; /* 确保焦点框在最上层 */
+        }
+
+        .nav-btn:focus-visible {
+            z-index: 10;
             position: relative;
         }
 
@@ -147,12 +153,6 @@
             border: 3px solid #003366;
             box-shadow: 0 0 0 3px #003366;
             font-weight: 700;
-        }
-
-        /* 返回导航时脚本聚焦的高亮（:focus-visible 对程序化 focus 不生效） */
-        .nav-btn--return-focus {
-            outline: 4px solid #ffcc00;
-            outline-offset: 2px;
         }
 
         /* 导航栏内的语言切换按钮 */
@@ -166,8 +166,6 @@
             border-color: #004080;
         }
         .lang-toggle-btn:focus-visible {
-            outline: 4px solid #ffcc00;
-            outline-offset: 2px;
             background: #003366;
         }
 
@@ -197,7 +195,6 @@
         }
 
         .content-section h2:focus-visible {
-            outline: 4px solid #ffcc00;
             outline-offset: 4px;
         }
 
@@ -214,12 +211,6 @@
             color: #333;
             line-height: 1.8;
             margin-bottom: 10px;
-        }
-
-        .readable-content:focus,
-        .readable-content:focus-visible {
-            outline: 4px solid #ffcc00;
-            outline-offset: 4px;
         }
 
         .content-section ul {
@@ -327,21 +318,17 @@
             text-decoration: underline;
         }
 
-        .contact-footer .contact-link {
-            display: flex;
-            align-items: center;
-            justify-content: center;
+        .contact-item {
             margin: 0 auto;
             max-width: 400px;
-            min-height: 44px;
             padding: 12px 16px;
             border-radius: 6px;
+        }
+
+        .contact-footer .contact-link {
+            display: inline;
             color: #fff;
             text-decoration: underline;
-        }
-        .contact-footer .contact-link:focus-visible {
-            outline: 4px solid #ffcc00;
-            outline-offset: 2px;
         }
 
         .contact-footer-meta {
@@ -445,11 +432,6 @@
             background: #003366;
         }
 
-        .lang-btn:focus-visible {
-            outline: 4px solid #ffcc00;
-            outline-offset: 2px;
-        }
-
         /* ========== 返回导航按钮 ========== */
         .back-to-nav {
             display: block;
@@ -467,11 +449,6 @@
         .back-to-nav:hover {
             background: rgba(173, 216, 230, 0.4);
         }
-        .back-to-nav:focus-visible {
-            outline: 4px solid #ffcc00;
-            outline-offset: 2px;
-        }
-
         /* ========== 移动端折叠导航按钮 ========== */
         .nav-toggle-btn {
             display: none; /* 桌面端隐藏 */
@@ -493,20 +470,8 @@
         .nav-toggle-btn:hover {
             background: #3a3a3a;
         }
-        .nav-toggle-btn:focus-visible {
-            outline: 4px solid #ffcc00;
-            outline-offset: 2px;
-        }
         .nav-toggle-btn:active {
             transform: scale(0.98);
-        }
-        .nav-toggle-btn .arrow-icon {
-            display: inline-block;
-            transition: transform 0.3s ease;
-            margin-left: 6px;
-        }
-        .nav-toggle-btn .arrow-icon--open {
-            transform: rotate(180deg);
         }
 
         /* ========== 平板端（641–1024px）：2 行固定网格 ========== */
@@ -686,13 +651,12 @@
             <button
                 ref="navToggleRef"
                 class="nav-toggle-btn"
-                :class="{ 'nav-toggle-btn--open': mobileNavOpen }"
                 @click="toggleMobileNav"
-                :aria-label="mobileNavOpen ? (currentLang === 'zh' ? '收起导航菜单' : 'Close navigation menu') : (currentLang === 'zh' ? '展开导航菜单' : 'Open navigation menu')"
+                :aria-label="navToggleAria"
                 :aria-expanded="mobileNavOpen"
                 aria-controls="main-nav"
             ><span aria-hidden="true">{{ mobileNavOpen ? '✕' : '☰' }}</span>
-                {{ mobileNavOpen ? (currentLang === 'zh' ? '关闭菜单' : 'Close') : (currentLang === 'zh' ? '菜单' : 'Menu') }}
+                {{ navToggleLabel }}
             </button>
 
             <!-- 给 nav 加个 ID 方便定位 -->
@@ -700,7 +664,8 @@
                  :class="{ 'nav-bar--open': mobileNavOpen }"
                  :aria-label="t.navAria[currentLang]"
                  :aria-hidden="mobileNavA11yHidden ? true : null"
-                 :inert="mobileNavA11yHidden ? true : null">
+                 :inert="mobileNavA11yHidden ? true : null"
+                 @focusout="onNavFocusOut">
                 <a
                     v-for="(item, index) in navItems"
                     :key="item.id"
@@ -724,184 +689,81 @@
 
         <!-- 主内容区 -->
         <main class="app-main" id="main-content" tabindex="-1">
-            <!-- 1. 产品概览 -->
-            <section id="overview" class="content-section" aria-labelledby="overview-title">
-                <!-- 栏目标题：Tab 顺序第一站；点击导航后由脚本优先聚焦 -->
-                <h2 id="overview-title" tabindex="0">{{ t.overview[currentLang] }}</h2>
-                <!-- 栏目正文：从标题按 Tab 进入此块，再 Tab 进入「回到导航栏」 -->
-                <div class="readable-content" tabindex="0">
-                    <p class="subtitle">{{ t.subTitle[currentLang] }}</p>
-                    <h3>{{ t.frontView[currentLang] }}</h3>
-                    <p>{{ t.frontVD[currentLang] }}</p>
-                    <h3>{{ t.topView[currentLang] }}</h3>
-                    <p>{{ t.topVD[currentLang] }}</p>
-                    <h3>{{ t.tactileBI[currentLang] }}</h3>
-                    <p>{{ t.tactileBD[currentLang] }}</p>
-                </div>
-                <button class="back-to-nav" @click="goToNav('overview')">{{ t.backToNav[currentLang] }}</button>
-            </section>
-
-            <!-- 2. 按键功能 -->
-            <section id="buttons" class="content-section" aria-labelledby="buttons-title">
-                <!-- 栏目标题：Tab 顺序第一站；点击导航后由脚本优先聚焦 -->
-                <h2 id="buttons-title" tabindex="0">{{ t.btnTitle[currentLang] }}</h2>
-                <!-- 栏目正文：从标题按 Tab 进入此块，再 Tab 进入「回到导航栏」 -->
-                <div class="readable-content" tabindex="0">
-                    <ul>
-                        <li><strong>{{ t.singleP[currentLang] }}:</strong> {{ t.singlePD[currentLang] }}</li>
-                        <li><strong>{{ t.doubleP[currentLang] }}:</strong> {{ t.doublePD[currentLang] }}</li>
-                        <li><strong>{{ t.longP[currentLang] }}:</strong> {{ t.longPD[currentLang] }}</li>
-                    </ul>
-                </div>
-                <button class="back-to-nav" @click="goToNav('buttons')">{{ t.backToNav[currentLang] }}</button>
-            </section>
-
-            <!-- 3. 电池指示灯 -->
-            <section id="led" class="content-section" aria-labelledby="led-title">
-                <!-- 栏目标题：Tab 顺序第一站；点击导航后由脚本优先聚焦 -->
-                <h2 id="led-title" tabindex="0">{{ t.pwrPrompt[currentLang] }}</h2>
-                <!-- 栏目正文：从标题按 Tab 进入此块，再 Tab 进入「回到导航栏」 -->
-                <div class="readable-content" tabindex="0">
-                    <p>{{ t.pwrPD[currentLang] }}</p>
-                    <ul>
-                        <li><strong>{{ t.pwrLabel1[currentLang] }}:</strong> {{ t.pwr1[currentLang] }}</li>
-                        <li><strong>{{ t.pwrLabel2[currentLang] }}:</strong> {{ t.pwr2[currentLang] }}</li>
-                        <li><strong>{{ t.pwrLabel3[currentLang] }}:</strong> {{ t.pwr3[currentLang] }}</li>
-                        <li><strong>{{ t.pwrLabel4[currentLang] }}:</strong> {{ t.pwr4[currentLang] }}</li>
-                    </ul>
-                </div>
-                <button class="back-to-nav" @click="goToNav('led')">{{ t.backToNav[currentLang] }}</button>
-            </section>
-
-            <!-- 4. 语音提示 -->
-            <section id="voice" class="content-section" aria-labelledby="voice-title">
-                <!-- 栏目标题：Tab 顺序第一站；点击导航后由脚本优先聚焦 -->
-                <h2 id="voice-title" tabindex="0">{{ t.vpTitle[currentLang] }}</h2>
-                <!-- 栏目正文：从标题按 Tab 进入此块，再 Tab 进入「回到导航栏」 -->
-                <div class="readable-content" tabindex="0">
-                    <ul>
-                        <li>{{ t.vp1[currentLang] }}</li>
-                        <li>{{ t.vp2[currentLang] }}</li>
-                        <li>{{ t.vp3[currentLang] }}</li>
-                        <li>{{ t.vp4[currentLang] }}</li>
-                        <li>{{ t.vp5[currentLang] }}</li>
-                        <li>{{ t.vp6[currentLang] }}</li>
-                    </ul>
-                </div>
-                <button class="back-to-nav" @click="goToNav('voice')">{{ t.backToNav[currentLang] }}</button>
-            </section>
-
-            <!-- 5. 产品规格 -->
-            <section id="specs" class="content-section" aria-labelledby="specs-title">
-                <!-- 栏目标题：Tab 顺序第一站；点击导航后由脚本优先聚焦 -->
-                <h2 id="specs-title" tabindex="0">{{ t.spTitle[currentLang] }}</h2>
-                <!-- 栏目正文：从标题按 Tab 进入此块，再 Tab 进入「回到导航栏」 -->
-                <div class="readable-content" tabindex="0">
-                    <ul>
-                        <li><strong>{{ t.sp1[currentLang] }}:</strong> {{ t.sp1v[currentLang] }}</li>
-                        <li><strong>{{ t.sp2[currentLang] }}:</strong> {{ t.sp2v[currentLang] }}</li>
-                        <li><strong>{{ t.sp3[currentLang] }}:</strong> {{ t.sp3v[currentLang] }}</li>
-                        <li><strong>{{ t.sp4[currentLang] }}:</strong> {{ t.sp4v[currentLang] }}</li>
-                        <li><strong>{{ t.sp5[currentLang] }}:</strong> {{ t.sp5v[currentLang] }}</li>
-                        <li><strong>{{ t.sp6[currentLang] }}:</strong> {{ t.sp6v[currentLang] }}</li>
-                    </ul>
-                </div>
-                <button class="back-to-nav" @click="goToNav('specs')">{{ t.backToNav[currentLang] }}</button>
-            </section>
-
-            <!-- 6. 常见问题 -->
-            <section id="faq" class="content-section" aria-labelledby="faq-title">
-                <!-- 栏目标题：Tab 顺序第一站；点击导航后由脚本优先聚焦 -->
-                <h2 id="faq-title" tabindex="0">{{ t.fqTitle[currentLang] }}</h2>
-                <!-- 栏目正文：从标题按 Tab 进入此块，再 Tab 进入「回到导航栏」 -->
-                <div class="readable-content" tabindex="0">
-                    <div>
-                        <h3>{{ t.fqQ1[currentLang] }}</h3>
-                        <p>{{ t.fqA1[currentLang] }}</p>
-                    </div>
-                    <div>
-                        <h3>{{ t.fqQ2[currentLang] }}</h3>
-                        <p>{{ t.fqA2[currentLang] }}</p>
-                    </div>
-                    <div>
-                        <h3>{{ t.fqQ3[currentLang] }}</h3>
-                        <p>{{ t.fqA3[currentLang] }}</p>
+            <section v-for="sec in CONTENT_SECTIONS" :key="sec.id" :id="sec.id" class="content-section"
+                     :aria-labelledby="sec.id + '-title'">
+                <h2 :id="sec.id + '-title'" :tabindex="sec.focusTitle ? 0 : -1">
+                    {{ t[sec.titleKey][currentLang] }}
+                </h2>
+                <div v-for="(block, bi) in sec.blocks" :key="bi"
+                     class="readable-content" tabindex="0" :aria-label="a11y[block.a11y]">
+                    <div aria-hidden="true">
+                        <p v-if="block.type === 'subtitle'" class="subtitle">{{ t[block.key][currentLang] }}</p>
+                        <template v-else-if="block.type === 'headingPara'">
+                            <h3>{{ t[block.title][currentLang] }}</h3>
+                            <p>{{ t[block.body][currentLang] }}</p>
+                        </template>
+                        <template v-else-if="block.type === 'introKvList'">
+                            <p>{{ t[block.intro][currentLang] }}</p>
+                            <ul>
+                                <li v-for="([k, v], ki) in block.items" :key="ki">
+                                    <strong>{{ t[k][currentLang] }}:</strong> {{ t[v][currentLang] }}
+                                </li>
+                            </ul>
+                        </template>
+                        <ul v-else-if="block.type === 'kvList'">
+                            <li v-for="([k, v], ki) in block.items" :key="ki">
+                                <strong>{{ t[k][currentLang] }}:</strong> {{ t[v][currentLang] }}
+                            </li>
+                        </ul>
+                        <ul v-else-if="block.type === 'plainList'">
+                            <li v-for="key in block.keys" :key="key">{{ t[key][currentLang] }}</li>
+                        </ul>
+                        <template v-else-if="block.type === 'faq'">
+                            <h3>{{ t[block.q][currentLang] }}</h3>
+                            <p>{{ t[block.a][currentLang] }}</p>
+                        </template>
                     </div>
                 </div>
-                <button class="back-to-nav" @click="goToNav('faq')">{{ t.backToNav[currentLang] }}</button>
-            </section>
-
-            <!-- 7. 我们期待您的反馈 (已修改为表单) -->
-            <section id="feedback" class="content-section" aria-labelledby="feedback-title">
-                <h2 id="feedback-title" tabindex="-1">{{ t.fbTitle[currentLang] }}</h2>
-                
-                <!-- 表单区域：增加无障碍标签关联 -->
-                <form class="fb-form" @submit.prevent="sendFeedback">
+                <form v-if="sec.hasForm" class="fb-form" @submit.prevent="sendFeedback">
                     <div class="fb-field">
                         <label class="fb-label" for="fb-name">{{ t.fbNameLabel[currentLang] }}</label>
-                        <input
-                            type="text"
-                            id="fb-name"
-                            class="fb-input"
-                            v-model="feedbackForm.name"
-                            :placeholder="t.fbNamePlaceholder[currentLang]"
-                        >
+                        <input type="text" id="fb-name" class="fb-input" v-model="feedbackForm.name"
+                               :placeholder="t.fbNamePlaceholder[currentLang]">
                     </div>
-
                     <div class="fb-field">
                         <label class="fb-label" for="fb-email">{{ t.fbEmailLabel[currentLang] }}</label>
-                        <input
-                            type="email"
-                            id="fb-email"
-                            class="fb-input"
-                            v-model="feedbackForm.email"
-                            :placeholder="t.fbEmailPlaceholder[currentLang]"
-                        >
+                        <input type="email" id="fb-email" class="fb-input" v-model="feedbackForm.email"
+                               :placeholder="t.fbEmailPlaceholder[currentLang]">
                     </div>
-
                     <div class="fb-field">
                         <label class="fb-label" for="fb-message">{{ t.fbMessageLabel[currentLang] }}</label>
-                        <textarea
-                            ref="feedbackMessageRef"
-                            id="fb-message"
-                            class="fb-textarea"
-                            v-model="feedbackForm.message"
-                            rows="5"
-                            aria-required="true"
-                            :aria-invalid="feedbackError ? 'true' : undefined"
-                            :aria-describedby="feedbackError ? 'fb-error' : undefined"
-                            :placeholder="t.fbD[currentLang]"
-                            @input="feedbackError = ''"
-                        ></textarea>
+                        <textarea ref="feedbackMessageRef" id="fb-message" class="fb-textarea"
+                                  v-model="feedbackForm.message" rows="5" aria-required="true"
+                                  :aria-invalid="feedbackError ? 'true' : undefined"
+                                  :aria-describedby="feedbackError ? 'fb-error' : undefined"
+                                  :placeholder="t.fbD[currentLang]" @input="feedbackError = ''"></textarea>
                     </div>
-
                     <p v-if="feedbackError" id="fb-error" class="fb-error" role="alert">{{ feedbackError }}</p>
-
                     <button type="submit" class="nav-btn fb-submit">{{ t.fbSubmit[currentLang] }}</button>
-
                     <p v-if="feedbackSent" class="fb-status" role="status">{{ t.fbSuccess[currentLang] }}</p>
                 </form>
-
-                <button class="back-to-nav" @click="goToNav('feedback')">{{ t.backToNav[currentLang] }}</button>
+                <button class="back-to-nav" @click="goToNav(sec.id)">{{ t.backToNav[currentLang] }}</button>
             </section>
         </main>
 
-        <!-- 联系我们页脚（全宽） -->
         <footer class="contact-footer" id="contact" aria-labelledby="contact-title">
             <h2 id="contact-title" tabindex="-1">{{ t.ctTitle[currentLang] }}</h2>
-
-            <a class="contact-link" href="https://s.wujieqh.com/" target="_blank" rel="noopener noreferrer">
-                {{ t.ctWeb[currentLang] }}: https://s.wujieqh.com/
-            </a>
-
-            <a class="contact-link" href="mailto:support@wujieqh.com">
-                {{ t.ctEmail[currentLang] }}: support@wujieqh.com
-            </a>
-
-            <a class="contact-link" :href="'tel:' + t.ctPhoneTel">
-                {{ t.ctPhone[currentLang] }}: {{ t.ctPhoneVal }}
-            </a>
-
+            <div v-for="c in CONTACTS" :key="c.a11y"
+                 class="contact-item readable-content" tabindex="0" :aria-label="a11y[c.a11y]">
+                <div aria-hidden="true">
+                    <p><strong>{{ t[c.labelKey][currentLang] }}:</strong>
+                        <a class="contact-link"
+                           :href="c.hrefTel ? 'tel:' + t.ctPhoneTel : c.href"
+                           :target="c.external ? '_blank' : undefined"
+                           :rel="c.external ? 'noopener noreferrer' : undefined">{{ c.display || t[c.displayKey] }}</a>
+                    </p>
+                </div>
+            </div>
             <div class="contact-footer-meta">
                 <p>{{ t.ctThanks[currentLang] }}</p>
                 <p>{{ t.ctCopy[currentLang] }}</p>
@@ -912,6 +774,63 @@
 
     <script>
         const { createApp, ref, computed, onMounted, onUnmounted, nextTick } = Vue;
+
+        const SECTION_IDS = ['overview', 'buttons', 'led', 'voice', 'specs', 'faq', 'feedback', 'contact'];
+
+        const NAV_LABEL_KEYS = {
+            overview: 'overview', buttons: 'buttons', led: 'led', voice: 'voice',
+            specs: 'specs', faq: 'faq', feedback: 'feedback', contact: 'contact',
+        };
+
+        const CONTENT_SECTIONS = [
+            {
+                id: 'overview', titleKey: 'overview', focusTitle: true,
+                blocks: [
+                    { a11y: 'overviewSub', type: 'subtitle', key: 'subTitle' },
+                    { a11y: 'overviewFront', type: 'headingPara', title: 'frontView', body: 'frontVD' },
+                    { a11y: 'overviewTop', type: 'headingPara', title: 'topView', body: 'topVD' },
+                    { a11y: 'overviewTactile', type: 'headingPara', title: 'tactileBI', body: 'tactileBD' },
+                ],
+            },
+            {
+                id: 'buttons', titleKey: 'btnTitle', focusTitle: true,
+                blocks: [{ a11y: 'buttons', type: 'kvList', items: [
+                    ['singleP', 'singlePD'], ['doubleP', 'doublePD'], ['longP', 'longPD'],
+                ]}],
+            },
+            {
+                id: 'led', titleKey: 'pwrPrompt', focusTitle: true,
+                blocks: [{ a11y: 'led', type: 'introKvList', intro: 'pwrPD', items: [
+                    ['pwrLabel1', 'pwr1'], ['pwrLabel2', 'pwr2'], ['pwrLabel3', 'pwr3'], ['pwrLabel4', 'pwr4'],
+                ]}],
+            },
+            {
+                id: 'voice', titleKey: 'vpTitle', focusTitle: true,
+                blocks: [{ a11y: 'voice', type: 'plainList', keys: ['vp1', 'vp2', 'vp3', 'vp4', 'vp5', 'vp6'] }],
+            },
+            {
+                id: 'specs', titleKey: 'spTitle', focusTitle: true,
+                blocks: [{ a11y: 'specs', type: 'kvList', items: [
+                    ['sp1', 'sp1v'], ['sp2', 'sp2v'], ['sp3', 'sp3v'],
+                    ['sp4', 'sp4v'], ['sp5', 'sp5v'], ['sp6', 'sp6v'],
+                ]}],
+            },
+            {
+                id: 'faq', titleKey: 'fqTitle', focusTitle: true,
+                blocks: [
+                    { a11y: 'faq1', type: 'faq', q: 'fqQ1', a: 'fqA1' },
+                    { a11y: 'faq2', type: 'faq', q: 'fqQ2', a: 'fqA2' },
+                    { a11y: 'faq3', type: 'faq', q: 'fqQ3', a: 'fqA3' },
+                ],
+            },
+            { id: 'feedback', titleKey: 'fbTitle', focusTitle: false, blocks: [], hasForm: true },
+        ];
+
+        const CONTACTS = [
+            { a11y: 'ctWeb', labelKey: 'ctWeb', href: 'https://s.wujieqh.com/', display: 'https://s.wujieqh.com/', external: true },
+            { a11y: 'ctEmail', labelKey: 'ctEmail', href: 'mailto:support@wujieqh.com', display: 'support@wujieqh.com' },
+            { a11y: 'ctPhone', labelKey: 'ctPhone', hrefTel: true, displayKey: 'ctPhoneVal' },
+        ];
 
         createApp({
             setup() {
@@ -926,22 +845,20 @@
                 const feedbackMessageRef = ref(null);
                 const windowWidth = ref(window.innerWidth);
 
+                function saveLang(lang) {
+                    try { sessionStorage.setItem('lang', lang); } catch (_) {}
+                }
+
                 function setLang(lang, moveFocus = true) {
                     currentLang.value = lang;
                     showLangModal.value = false;
                     applyPageLang(lang);
-                    try { sessionStorage.setItem('lang', lang); } catch (e) { /* private browsing */ }
-                    if (moveFocus) {
-                        nextTick(() => pageTitleRef.value?.focus());
-                    }
+                    saveLang(lang);
+                    if (moveFocus) nextTick(() => pageTitleRef.value?.focus());
                 }
 
-                // 快速切换语言
                 function toggleLang() {
-                    const lang = currentLang.value === 'en' ? 'zh' : 'en';
-                    currentLang.value = lang;
-                    applyPageLang(lang);
-                    try { sessionStorage.setItem('lang', lang); } catch (e) { /* private browsing */ }
+                    setLang(currentLang.value === 'en' ? 'zh' : 'en', false);
                 }
 
                 // 移动端：切换导航展开/折叠
@@ -958,6 +875,20 @@
                         if (opening) {
                             waitForHeaderStable(() => navBtnRefs.value[0]?.focus());
                         }
+                    });
+                }
+
+                // 移动端：Tab 焦点离开导航栏时自动折叠
+                function onNavFocusOut() {
+                    if (!isMobileNavCollapsed() || !mobileNavOpen.value) return;
+
+                    requestAnimationFrame(() => {
+                        if (!mobileNavOpen.value) return;
+                        const navBar = document.getElementById('main-nav');
+                        const active = document.activeElement;
+                        if (navBar?.contains(active)) return;
+
+                        mobileNavOpen.value = false;
                     });
                 }
 
@@ -987,6 +918,10 @@
                     skipLink:             { en: 'Skip to main content',            zh: '跳到主要内容' },
                     navAria:              { en: 'Main navigation',                 zh: '主导航' },
                     switchLang:           { en: 'English / 中文 — Switch language', zh: 'English / 中文 — 切换语言' },
+                    navToggleOpen:        { en: 'Close navigation menu',           zh: '收起导航菜单' },
+                    navToggleClosed:      { en: 'Open navigation menu',            zh: '展开导航菜单' },
+                    navMenuOpen:          { en: 'Close',                           zh: '关闭菜单' },
+                    navMenuClosed:        { en: 'Menu',                            zh: '菜单' },
                     overview:             { en: 'Product Overview',                zh: '产品概览' },
                     buttons:              { en: 'Button Functions',                zh: '按键功能' },
                     led:                  { en: 'Battery Indicator',               zh: '电池指示灯' },
@@ -1076,16 +1011,46 @@
                     document.documentElement.lang = lang === 'zh' ? 'zh-CN' : 'en';
                 }
 
-                const navItems = computed(() => [
-                    { id: 'overview',  label: t.overview[currentLang.value] },
-                    { id: 'buttons',   label: t.buttons[currentLang.value] },
-                    { id: 'led',       label: t.led[currentLang.value] },
-                    { id: 'voice',     label: t.voice[currentLang.value] },
-                    { id: 'specs',     label: t.specs[currentLang.value] },
-                    { id: 'faq',       label: t.faq[currentLang.value] },
-                    { id: 'feedback',  label: t.feedback[currentLang.value] },
-                    { id: 'contact',   label: t.contact[currentLang.value] },
-                ]);
+                const navItems = computed(() =>
+                    SECTION_IDS.map(id => ({
+                        id,
+                        label: t[NAV_LABEL_KEYS[id]][currentLang.value],
+                    }))
+                );
+
+                const navToggleAria = computed(() =>
+                    t[mobileNavOpen.value ? 'navToggleOpen' : 'navToggleClosed'][currentLang.value]
+                );
+                const navToggleLabel = computed(() =>
+                    t[mobileNavOpen.value ? 'navMenuOpen' : 'navMenuClosed'][currentLang.value]
+                );
+
+                const joinPairs = (lang, pairs, sep = '. ') =>
+                    pairs.map(([k, v]) => `${t[k][lang]}: ${t[v][lang]}`).join(sep);
+
+                const a11y = computed(() => {
+                    const lang = currentLang.value;
+                    const vpKeys = ['vp1', 'vp2', 'vp3', 'vp4', 'vp5', 'vp6'];
+                    const spPairs = [['sp1','sp1v'],['sp2','sp2v'],['sp3','sp3v'],['sp4','sp4v'],['sp5','sp5v'],['sp6','sp6v']];
+                    const btnPairs = [['singleP','singlePD'],['doubleP','doublePD'],['longP','longPD']];
+                    const pwrPairs = [['pwrLabel1','pwr1'],['pwrLabel2','pwr2'],['pwrLabel3','pwr3'],['pwrLabel4','pwr4']];
+                    return {
+                        overviewSub: t.subTitle[lang],
+                        overviewFront: `${t.frontView[lang]}. ${t.frontVD[lang]}`,
+                        overviewTop: `${t.topView[lang]}. ${t.topVD[lang]}`,
+                        overviewTactile: `${t.tactileBI[lang]}. ${t.tactileBD[lang]}`,
+                        buttons: `${t.btnTitle[lang]}. ${joinPairs(lang, btnPairs)}`,
+                        led: `${t.pwrPD[lang]} ${joinPairs(lang, pwrPairs)}`,
+                        voice: `${t.vpTitle[lang]}: ${vpKeys.map(k => t[k][lang]).join('. ')}`,
+                        specs: `${t.spTitle[lang]}. ${joinPairs(lang, spPairs)}`,
+                        faq1: `${t.fqQ1[lang]} ${t.fqA1[lang]}`,
+                        faq2: `${t.fqQ2[lang]} ${t.fqA2[lang]}`,
+                        faq3: `${t.fqQ3[lang]} ${t.fqA3[lang]}`,
+                        ctWeb: `${t.ctWeb[lang]}: https://s.wujieqh.com/`,
+                        ctEmail: `${t.ctEmail[lang]}: support@wujieqh.com`,
+                        ctPhone: `${t.ctPhone[lang]}: ${t.ctPhoneVal}`,
+                    };
+                });
 
                 const activeSection = ref('overview');
 
@@ -1103,10 +1068,16 @@
                 let headerObserver = null;
 
                 function getLayoutMode() {
-                    const w = window.innerWidth;
+                    const w = windowWidth.value;
                     if (w <= BREAKPOINTS.phone) return 'phone';
                     if (w <= BREAKPOINTS.tablet) return 'tablet';
                     return 'desktop';
+                }
+
+                function focusEl(el) {
+                    if (!el) return;
+                    el.focus({ preventScroll: true });
+                    nextTick(() => el.focus({ preventScroll: true }));
                 }
 
                 function isMobileNavCollapsed() {
@@ -1189,11 +1160,7 @@
                 }
 
                 function findNavLink(navBar, id) {
-                    if (!navBar || !id) return null;
-                    const target = `#${id}`;
-                    return [...navBar.querySelectorAll('a.nav-btn')].find(a => {
-                        return a.hash === target || a.getAttribute('href') === target;
-                    }) ?? null;
+                    return navBar?.querySelector(`a.nav-btn[href="#${id}"]`) ?? null;
                 }
 
                 function focusNavLink(navBar, id) {
@@ -1280,11 +1247,7 @@
 
                     const top = el.getBoundingClientRect().top + window.scrollY - getScrollOffset();
                     scrollToY(top, () => {
-                        const heading = document.getElementById(`${id}-title`);
-                        if (heading) {
-                            heading.focus({ preventScroll: true });
-                            nextTick(() => heading.focus({ preventScroll: true }));
-                        }
+                        focusEl(document.getElementById(`${id}-title`));
                         scrollLock = false;
                         updateActiveFromObserver();
                     });
@@ -1478,10 +1441,12 @@
                     }
                 });
 
-                return { 
+                return {
+                    CONTENT_SECTIONS, CONTACTS,
                     navItems, activeSection, scrollToSection, goToNav, onSkipLinkClick,
-                    showLangModal, currentLang, setLang, toggleLang, t, navBtnRefs, pageTitleRef,
-                    mobileNavOpen, mobileNavA11yHidden, navToggleRef, toggleMobileNav, onNavClick,
+                    showLangModal, currentLang, setLang, toggleLang, t, a11y, navBtnRefs, pageTitleRef,
+                    navToggleAria, navToggleLabel,
+                    mobileNavOpen, mobileNavA11yHidden, navToggleRef, toggleMobileNav, onNavFocusOut, onNavClick,
                     feedbackForm, feedbackSent, feedbackError, feedbackMessageRef, sendFeedback
                 };
             }
