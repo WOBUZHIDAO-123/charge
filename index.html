@@ -128,9 +128,8 @@
             transform: scale(0.96);
         }
 
-        /* 【修复点1】增强焦点可见性：无论是键盘还是脚本 focus，都显示明显边框 */
-        .nav-btn:focus-visible,
-        .nav-btn:focus {
+        /* 【修复点1】增强焦点可见性 */
+        .nav-btn:focus-visible {
             outline: 4px solid #ffcc00; /* 高对比度黄色 */
             outline-offset: 2px;
             z-index: 10; /* 确保焦点框在最上层 */
@@ -233,6 +232,71 @@
             font-style: italic;
         }
 
+        /* 朗读块：TalkBack 语义分组 */
+        [role="group"][tabindex="0"] {
+            outline: none;
+        }
+        [role="group"][tabindex="0"]:focus-visible {
+            outline: 4px solid #ffcc00;
+            outline-offset: 2px;
+        }
+
+        /* ========== 反馈表单 ========== */
+        .fb-form {
+            margin-top: 20px;
+        }
+        .fb-field {
+            margin-bottom: 16px;
+        }
+        .fb-field:last-of-type {
+            margin-bottom: 24px;
+        }
+        .fb-label {
+            display: block;
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: #333;
+        }
+        .fb-input,
+        .fb-textarea {
+            width: 100%;
+            padding: 12px 16px;
+            font-size: 18px;
+            border: 2px solid #e0dcd4;
+            border-radius: 4px;
+            outline: none;
+            font-family: inherit;
+        }
+        .fb-textarea {
+            resize: vertical;
+            line-height: 1.6;
+        }
+        .fb-input:focus-visible,
+        .fb-textarea:focus-visible {
+            border-color: #003366;
+            outline: 4px solid #ffcc00;
+            outline-offset: 2px;
+        }
+        .fb-submit {
+            min-width: 200px;
+            background: #003366;
+            color: #FFFFF0;
+            border-color: #003366;
+        }
+        .fb-error {
+            margin-top: 12px;
+            color: #c00;
+            font-weight: 600;
+            font-size: 16px;
+        }
+        .fb-status {
+            margin-top: 12px;
+            color: green;
+            font-weight: 600;
+            font-size: 16px;
+        }
+
         /* ========== 联系我们页脚 ========== */
         .contact-footer {
             width: 100%;
@@ -261,19 +325,17 @@
             text-decoration: underline;
         }
 
-        /* 三个联系项各自独立容器 */
-        .contact-item {
+        .contact-footer .contact-link {
             margin: 0 auto;
             max-width: 400px;
             padding: 12px 16px;
             border-radius: 6px;
-            transition: background 0.15s;
-            cursor: default;
         }
-        .contact-item:hover {
-            background: rgba(255,255,255,0.06);
+        .contact-footer .contact-link a {
+            display: inline-block;
+            padding: 4px 0;
         }
-        .contact-item:focus-visible {
+        .contact-footer .contact-link a:focus-visible {
             outline: 4px solid #ffcc00;
             outline-offset: 2px;
         }
@@ -591,9 +653,9 @@
 <body>
     <div id="app">
         <!-- 语言选择弹窗 -->
-        <div v-if="showLangModal" class="lang-overlay" role="dialog" aria-modal="true" aria-label="Language selection">
+        <div v-if="showLangModal" class="lang-overlay" role="dialog" aria-modal="true" :aria-label="t.langModalAria[currentLang]">
             <div class="lang-modal">
-                <p>Please select<br>请选择语言</p>
+                <p>{{ t.langModalPrompt[currentLang] }}</p>
                 <div class="lang-btn-group">
                     <button class="lang-btn" @click="setLang('en')">English</button>
                     <button class="lang-btn" @click="setLang('zh')">中文</button>
@@ -601,6 +663,7 @@
             </div>
         </div>
 
+        <div :inert="showLangModal ? true : null" :aria-hidden="showLangModal ? true : null">
         <!-- 无障碍跳过链接 -->
         <a href="#main-content" class="skip-link">{{ t.skipLink[currentLang] }}</a>
 
@@ -608,7 +671,7 @@
         <header class="app-header">
             <div class="header-top">
                 <div class="header-logo-wrap">
-                    <img src="product-logo.png" alt="Product Logo">
+                    <img src="product-logo.png" :alt="t.logoAlt[currentLang]">
                 </div>
                 <h1>{{ t.pageTitle[currentLang] }}</h1>
             </div>
@@ -656,24 +719,24 @@
             <!-- 1. 产品概览 -->
             <section id="overview" class="content-section" aria-labelledby="overview-title">
                 <h2 id="overview-title">{{ t.overview[currentLang] }}</h2>
-                <div tabindex="0" :aria-label="t.subTitle[currentLang]">
+                <div role="group" tabindex="0" :aria-label="t.subTitle[currentLang]">
                     <div aria-hidden="true">
                         <p class="subtitle">{{ t.subTitle[currentLang] }}</p>
                     </div>
                 </div>
-                <div tabindex="0" :aria-label="t.frontView[currentLang] + '. ' + t.frontVD[currentLang]">
+                <div role="group" tabindex="0" :aria-label="t.frontView[currentLang] + '. ' + t.frontVD[currentLang]">
                     <div aria-hidden="true">
                         <h3>{{ t.frontView[currentLang] }}</h3>
                         <p>{{ t.frontVD[currentLang] }}</p>
                     </div>
                 </div>
-                <div tabindex="0" :aria-label="t.topView[currentLang] + '. ' + t.topVD[currentLang]">
+                <div role="group" tabindex="0" :aria-label="t.topView[currentLang] + '. ' + t.topVD[currentLang]">
                     <div aria-hidden="true">
                         <h3>{{ t.topView[currentLang] }}</h3>
                         <p>{{ t.topVD[currentLang] }}</p>
                     </div>
                 </div>
-                <div tabindex="0" :aria-label="t.tactileBI[currentLang] + '. ' + t.tactileBD[currentLang]">
+                <div role="group" tabindex="0" :aria-label="t.tactileBI[currentLang] + '. ' + t.tactileBD[currentLang]">
                     <div aria-hidden="true">
                         <h3>{{ t.tactileBI[currentLang] }}</h3>
                         <p>{{ t.tactileBD[currentLang] }}</p>
@@ -685,7 +748,7 @@
             <!-- 2. 按键功能 -->
             <section id="buttons" class="content-section" aria-labelledby="buttons-title">
                 <h2 id="buttons-title">{{ t.btnTitle[currentLang] }}</h2>
-                <div tabindex="0" :aria-label="t.btnTitle[currentLang] + '. ' + t.singleP[currentLang] + ': ' + t.singlePD[currentLang] + '. ' + t.doubleP[currentLang] + ': ' + t.doublePD[currentLang] + '. ' + t.longP[currentLang] + ': ' + t.longPD[currentLang]">
+                <div role="group" tabindex="0" :aria-label="t.singleP[currentLang] + ': ' + t.singlePD[currentLang] + '. ' + t.doubleP[currentLang] + ': ' + t.doublePD[currentLang] + '. ' + t.longP[currentLang] + ': ' + t.longPD[currentLang]">
                     <div aria-hidden="true">
                         <ul>
                             <li><strong>{{ t.singleP[currentLang] }}:</strong> {{ t.singlePD[currentLang] }}</li>
@@ -700,7 +763,7 @@
             <!-- 3. 电池指示灯 -->
             <section id="led" class="content-section" aria-labelledby="led-title">
                 <h2 id="led-title">{{ t.pwrPrompt[currentLang] }}</h2>
-                <div tabindex="0" :aria-label="t.pwrPD[currentLang] + ' ' + t.pwrLabel1[currentLang] + ': ' + t.pwr1[currentLang] + '. ' + t.pwrLabel2[currentLang] + ': ' + t.pwr2[currentLang] + '. ' + t.pwrLabel3[currentLang] + ': ' + t.pwr3[currentLang] + '. ' + t.pwrLabel4[currentLang] + ': ' + t.pwr4[currentLang]">
+                <div role="group" tabindex="0" :aria-label="t.pwrPD[currentLang] + ' ' + t.pwrLabel1[currentLang] + ': ' + t.pwr1[currentLang] + '. ' + t.pwrLabel2[currentLang] + ': ' + t.pwr2[currentLang] + '. ' + t.pwrLabel3[currentLang] + ': ' + t.pwr3[currentLang] + '. ' + t.pwrLabel4[currentLang] + ': ' + t.pwr4[currentLang]">
                     <div aria-hidden="true">
                         <p>{{ t.pwrPD[currentLang] }}</p>
                         <ul>
@@ -717,7 +780,7 @@
             <!-- 4. 语音提示 -->
             <section id="voice" class="content-section" aria-labelledby="voice-title">
                 <h2 id="voice-title">{{ t.vpTitle[currentLang] }}</h2>
-                <div tabindex="0" :aria-label="t.vpTitle[currentLang] + ': ' + t.vp1[currentLang] + '. ' + t.vp2[currentLang] + '. ' + t.vp3[currentLang] + '. ' + t.vp4[currentLang] + '. ' + t.vp5[currentLang] + '. ' + t.vp6[currentLang]">
+                <div role="group" tabindex="0" :aria-label="t.vp1[currentLang] + '. ' + t.vp2[currentLang] + '. ' + t.vp3[currentLang] + '. ' + t.vp4[currentLang] + '. ' + t.vp5[currentLang] + '. ' + t.vp6[currentLang]">
                     <div aria-hidden="true">
                         <ul>
                             <li>{{ t.vp1[currentLang] }}</li>
@@ -735,7 +798,7 @@
             <!-- 5. 产品规格 -->
             <section id="specs" class="content-section" aria-labelledby="specs-title">
                 <h2 id="specs-title">{{ t.spTitle[currentLang] }}</h2>
-                <div tabindex="0" :aria-label="t.spTitle[currentLang] + '. ' + t.sp1[currentLang] + ': ' + t.sp1v[currentLang] + '. ' + t.sp2[currentLang] + ': ' + t.sp2v[currentLang] + '. ' + t.sp3[currentLang] + ': ' + t.sp3v[currentLang] + '. ' + t.sp4[currentLang] + ': ' + t.sp4v[currentLang] + '. ' + t.sp5[currentLang] + ': ' + t.sp5v[currentLang] + '. ' + t.sp6[currentLang] + ': ' + t.sp6v[currentLang]">
+                <div role="group" tabindex="0" :aria-label="t.sp1[currentLang] + ': ' + t.sp1v[currentLang] + '. ' + t.sp2[currentLang] + ': ' + t.sp2v[currentLang] + '. ' + t.sp3[currentLang] + ': ' + t.sp3v[currentLang] + '. ' + t.sp4[currentLang] + ': ' + t.sp4v[currentLang] + '. ' + t.sp5[currentLang] + ': ' + t.sp5v[currentLang] + '. ' + t.sp6[currentLang] + ': ' + t.sp6v[currentLang]">
                     <div aria-hidden="true">
                         <ul>
                             <li><strong>{{ t.sp1[currentLang] }}:</strong> {{ t.sp1v[currentLang] }}</li>
@@ -753,19 +816,19 @@
             <!-- 6. 常见问题 -->
             <section id="faq" class="content-section" aria-labelledby="faq-title">
                 <h2 id="faq-title">{{ t.fqTitle[currentLang] }}</h2>
-                <div tabindex="0" :aria-label="t.fqQ1[currentLang] + ' ' + t.fqA1[currentLang]">
+                <div role="group" tabindex="0" :aria-label="t.fqQ1[currentLang] + ' ' + t.fqA1[currentLang]">
                     <div aria-hidden="true">
                         <p><strong>{{ t.fqQ1[currentLang] }}</strong></p>
                         <p>{{ t.fqA1[currentLang] }}</p>
                     </div>
                 </div>
-                <div tabindex="0" :aria-label="t.fqQ2[currentLang] + ' ' + t.fqA2[currentLang]">
+                <div role="group" tabindex="0" :aria-label="t.fqQ2[currentLang] + ' ' + t.fqA2[currentLang]">
                     <div aria-hidden="true">
                         <p><strong>{{ t.fqQ2[currentLang] }}</strong></p>
                         <p>{{ t.fqA2[currentLang] }}</p>
                     </div>
                 </div>
-                <div tabindex="0" :aria-label="t.fqQ3[currentLang] + ' ' + t.fqA3[currentLang]">
+                <div role="group" tabindex="0" :aria-label="t.fqQ3[currentLang] + ' ' + t.fqA3[currentLang]">
                     <div aria-hidden="true">
                         <p><strong>{{ t.fqQ3[currentLang] }}</strong></p>
                         <p>{{ t.fqA3[currentLang] }}</p>
@@ -779,63 +842,45 @@
                 <h2 id="feedback-title">{{ t.fbTitle[currentLang] }}</h2>
                 
                 <!-- 表单区域：增加无障碍标签关联 -->
-                <form @submit.prevent="sendFeedback" style="margin-top: 20px;">
-                    <div style="margin-bottom: 16px;">
-                        <label for="fb-name" style="display:block; font-size:18px; font-weight:600; margin-bottom:6px; color:#333;">
-                            {{ currentLang === 'zh' ? '您的称呼' : 'Your Name' }}
-                        </label>
-                        <input 
-                            type="text" 
-                            id="fb-name" 
-                            v-model="feedbackForm.name" 
-                            :placeholder="currentLang === 'zh' ? '请输入您的姓名或昵称' : 'Enter your name or nickname'"
-                            style="width:100%; padding:12px 16px; font-size:18px; border:2px solid #e0dcd4; border-radius:4px; outline:none;"
-                            @focus="$event.target.style.borderColor='#003366'"
-                            @blur="$event.target.style.borderColor='#e0dcd4'"
+                <form class="fb-form" @submit.prevent="sendFeedback">
+                    <div class="fb-field">
+                        <label class="fb-label" for="fb-name">{{ t.fbNameLabel[currentLang] }}</label>
+                        <input
+                            type="text"
+                            id="fb-name"
+                            class="fb-input"
+                            v-model="feedbackForm.name"
+                            :placeholder="t.fbNamePlaceholder[currentLang]"
                         >
                     </div>
 
-                    <div style="margin-bottom: 16px;">
-                        <label for="fb-email" style="display:block; font-size:18px; font-weight:600; margin-bottom:6px; color:#333;">
-                            {{ currentLang === 'zh' ? '电子邮箱' : 'Email Address' }}
-                        </label>
-                        <input 
-                            type="email" 
-                            id="fb-email" 
-                            v-model="feedbackForm.email" 
-                            :placeholder="currentLang === 'zh' ? 'example@mail.com' : 'example@mail.com'"
-                            style="width:100%; padding:12px 16px; font-size:18px; border:2px solid #e0dcd4; border-radius:4px; outline:none;"
-                            @focus="$event.target.style.borderColor='#003366'"
-                            @blur="$event.target.style.borderColor='#e0dcd4'"
+                    <div class="fb-field">
+                        <label class="fb-label" for="fb-email">{{ t.fbEmailLabel[currentLang] }}</label>
+                        <input
+                            type="email"
+                            id="fb-email"
+                            class="fb-input"
+                            v-model="feedbackForm.email"
+                            :placeholder="t.fbEmailPlaceholder[currentLang]"
                         >
                     </div>
 
-                    <div style="margin-bottom: 24px;">
-                        <label for="fb-message" style="display:block; font-size:18px; font-weight:600; margin-bottom:6px; color:#333;">
-                            {{ currentLang === 'zh' ? '留言内容' : 'Your Message' }}
-                        </label>
-                        <textarea 
-                            id="fb-message" 
-                            v-model="feedbackForm.message" 
+                    <div class="fb-field">
+                        <label class="fb-label" for="fb-message">{{ t.fbMessageLabel[currentLang] }}</label>
+                        <textarea
+                            id="fb-message"
+                            class="fb-textarea"
+                            v-model="feedbackForm.message"
                             rows="5"
                             :placeholder="t.fbD[currentLang]"
-                            style="width:100%; padding:12px 16px; font-size:18px; border:2px solid #e0dcd4; border-radius:4px; outline:none; resize:vertical; line-height:1.6;"
-                            @focus="$event.target.style.borderColor='#003366'"
-                            @blur="$event.target.style.borderColor='#e0dcd4'"
                         ></textarea>
                     </div>
 
-                    <button 
-                        type="submit" 
-                        class="nav-btn" 
-                        style="min-width:200px; background:#003366; color:#FFFFF0; border-color:#003366;"
-                    >
-                        {{ currentLang === 'zh' ? '发送留言' : 'Send Feedback' }}
-                    </button>
-                    
-                    <p v-if="feedbackSent" style="margin-top:12px; color:green; font-weight:600; font-size:16px;" role="status">
-                        {{ currentLang === 'zh' ? '✓ 已唤起邮件客户端，请确认发送' : '✓ Email client opened, please confirm to send' }}
-                    </p>
+                    <p v-if="feedbackError" id="fb-error" class="fb-error" role="alert" aria-live="assertive" tabindex="-1">{{ feedbackError }}</p>
+
+                    <button type="submit" class="nav-btn fb-submit">{{ t.fbSubmit[currentLang] }}</button>
+
+                    <p v-if="feedbackSent" class="fb-status" role="status" aria-live="polite">{{ t.fbSuccess[currentLang] }}</p>
                 </form>
 
                 <button class="back-to-nav" @click="goToNav('feedback')">{{ t.backToNav[currentLang] }}</button>
@@ -846,33 +891,35 @@
         <footer class="contact-footer" id="contact" aria-labelledby="contact-title">
             <h2 id="contact-title">{{ t.ctTitle[currentLang] }}</h2>
 
-            <!-- 官方网站 -->
-            <div class="contact-item" tabindex="0" :aria-label="t.ctWeb[currentLang] + ': https://s.wujieqh.com/'">
-                <div aria-hidden="true">
-                    <p><strong>{{ t.ctWeb[currentLang] }}:</strong> <a href="https://s.wujieqh.com/" target="_blank" rel="noopener noreferrer">https://s.wujieqh.com/</a></p>
-                </div>
-            </div>
+            <p class="contact-link">
+                <a href="https://s.wujieqh.com/" target="_blank" rel="noopener noreferrer"
+                   :aria-label="t.ctWeb[currentLang] + ': https://s.wujieqh.com/'">
+                    <span aria-hidden="true">{{ t.ctWeb[currentLang] }}: https://s.wujieqh.com/</span>
+                </a>
+            </p>
 
-            <!-- 电子邮箱 -->
-            <div class="contact-item" tabindex="0" :aria-label="t.ctEmail[currentLang] + ': support@wujieqh.com'">
-                <div aria-hidden="true">
-                    <p><strong>{{ t.ctEmail[currentLang] }}:</strong> <a href="mailto:support@wujieqh.com">support@wujieqh.com</a></p>
-                </div>
-            </div>
+            <p class="contact-link">
+                <a href="mailto:support@wujieqh.com"
+                   :aria-label="t.ctEmail[currentLang] + ': support@wujieqh.com'">
+                    <span aria-hidden="true">{{ t.ctEmail[currentLang] }}: support@wujieqh.com</span>
+                </a>
+            </p>
 
-            <!-- 电话联系 -->
-            <div class="contact-item" tabindex="0" :aria-label="t.ctPhone[currentLang] + ': ' + t.ctPhoneVal">
-                <div aria-hidden="true">
-                    <p><strong>{{ t.ctPhone[currentLang] }}:</strong> <a :href="'tel:' + t.ctPhoneTel">{{ t.ctPhoneVal }}</a></p>
-                </div>
-            </div>
+            <p class="contact-link">
+                <a :href="'tel:' + t.ctPhoneTel"
+                   :aria-label="t.ctPhone[currentLang] + ': ' + t.ctPhoneVal">
+                    <span aria-hidden="true">{{ t.ctPhone[currentLang] }}: {{ t.ctPhoneVal }}</span>
+                </a>
+            </p>
 
-            <!-- 感谢与版权 -->
-            <div class="contact-footer-meta">
-                <p>{{ t.ctThanks[currentLang] }}</p>
-                <p>{{ t.ctCopy[currentLang] }}</p>
+            <div role="group" tabindex="0" :aria-label="t.ctThanks[currentLang] + ' ' + t.ctCopy[currentLang]">
+                <div class="contact-footer-meta" aria-hidden="true">
+                    <p>{{ t.ctThanks[currentLang] }}</p>
+                    <p>{{ t.ctCopy[currentLang] }}</p>
+                </div>
             </div>
         </footer>
+        </div>
     </div>
 
     <script>
@@ -893,6 +940,7 @@
                     currentLang.value = lang;
                     showLangModal.value = false;
                     applyPageLang(lang);
+                    try { sessionStorage.setItem('lang', lang); } catch (e) { /* private browsing */ }
                 }
 
                 // 快速切换语言
@@ -900,6 +948,7 @@
                     const lang = currentLang.value === 'en' ? 'zh' : 'en';
                     currentLang.value = lang;
                     applyPageLang(lang);
+                    try { sessionStorage.setItem('lang', lang); } catch (e) { /* private browsing */ }
                 }
 
                 // 移动端：切换导航展开/折叠
@@ -918,16 +967,36 @@
                     });
                 }
 
-                // ESC 关闭弹窗
+                // ESC / Tab 焦点陷阱（语言弹窗）
                 function onKeydown(e) {
-                    if (e.key === 'Escape' && showLangModal.value) {
+                    if (!showLangModal.value) return;
+
+                    if (e.key === 'Escape') {
                         showLangModal.value = false;
+                        return;
+                    }
+
+                    if (e.key === 'Tab') {
+                        const btns = document.querySelectorAll('.lang-btn');
+                        if (btns.length < 2) return;
+                        const first = btns[0];
+                        const last = btns[btns.length - 1];
+                        if (e.shiftKey && document.activeElement === first) {
+                            e.preventDefault();
+                            last.focus();
+                        } else if (!e.shiftKey && document.activeElement === last) {
+                            e.preventDefault();
+                            first.focus();
+                        }
                     }
                 }
 
                 // 双语翻译数据
                 const t = {
                     pageTitle:            { en: 'XO Tactile Voice Power Bank',   zh: 'XO 触感语音充电宝' },
+                    logoAlt:              { en: 'Product Logo',                    zh: '产品标志' },
+                    langModalAria:        { en: 'Language selection',              zh: '语言选择' },
+                    langModalPrompt:      { en: 'Please select your language',     zh: '请选择语言' },
                     skipLink:             { en: 'Skip to main content',            zh: '跳到主要内容' },
                     navAria:              { en: 'Main navigation',                 zh: '主导航' },
                     mainAria:             { en: 'Main content',                    zh: '主要内容' },
@@ -998,6 +1067,14 @@
                     fqA3:      { en: 'Yes, this product is 3C certified and can be taken on planes, trains, etc.', zh: '产品已通过3C认证，可以带上飞机、火车等场所。' },
                     fbTitle:   { en: 'We\'d Love Your Feedback', zh: '我们期待您的反馈' },
                     fbD:       { en: 'Please share your feedback on the packaging, tactile design, voice prompts, and overall experience.', zh: '请分享您对包装、触觉设计、语音提示和整体体验的反馈意见。' },
+                    fbNameLabel:       { en: 'Your Name', zh: '您的称呼' },
+                    fbEmailLabel:      { en: 'Email Address', zh: '电子邮箱' },
+                    fbMessageLabel:    { en: 'Your Message', zh: '留言内容' },
+                    fbNamePlaceholder: { en: 'Enter your name or nickname', zh: '请输入您的姓名或昵称' },
+                    fbEmailPlaceholder:{ en: 'example@mail.com', zh: 'example@mail.com' },
+                    fbSubmit:          { en: 'Send Feedback', zh: '发送留言' },
+                    fbError:           { en: 'Please enter your message', zh: '请填写留言内容' },
+                    fbSuccess:         { en: 'Email client opened, please confirm to send', zh: '已唤起邮件客户端，请确认发送' },
                     ctTitle:   { en: 'Contact Us', zh: '联系我们' },
                     ctWeb:     { en: 'Website', zh: '官方网站' },
                     ctEmail:   { en: 'Email', zh: '电子邮箱' },
@@ -1236,16 +1313,19 @@
                     message: ''
                 });
                 const feedbackSent = ref(false);
+                const feedbackError = ref('');
 
                 function sendFeedback() {
                     const { name, email, message } = feedbackForm.value;
-                    
-                    // 基础校验
+
                     if (!message.trim()) {
-                        alert(currentLang.value === 'zh' ? '请填写留言内容' : 'Please enter your message');
+                        feedbackError.value = t.fbError[currentLang.value];
+                        feedbackSent.value = false;
+                        nextTick(() => document.getElementById('fb-error')?.focus());
                         return;
                     }
 
+                    feedbackError.value = '';
                     // 构建邮件主题和正文
                     const subject = encodeURIComponent(
                         currentLang.value === 'zh' 
@@ -1292,15 +1372,22 @@
                 }
 
                 onMounted(() => {
-                    applyPageLang(currentLang.value);
+                    let savedLang = null;
+                    try { savedLang = sessionStorage.getItem('lang'); } catch (e) { /* private browsing */ }
+
+                    if (savedLang === 'en' || savedLang === 'zh') {
+                        setLang(savedLang);
+                    } else {
+                        applyPageLang(currentLang.value);
+                    }
+
                     window.addEventListener('keydown', onKeydown);
                     window.addEventListener('scroll', onScrollBottomCheck, { passive: true });
                     window.addEventListener('resize', onResize);
 
                     if (showLangModal.value) {
                         nextTick(() => {
-                            const firstBtn = document.querySelector('.lang-btn');
-                            firstBtn?.focus();
+                            document.querySelector('.lang-btn')?.focus();
                         });
                     }
 
@@ -1344,7 +1431,7 @@
                     navItems, activeSection, scrollToSection, goToNav, 
                     showLangModal, currentLang, setLang, toggleLang, t, navBtnRefs,
                     mobileNavOpen, mobileNavA11yHidden, navToggleRef, toggleMobileNav, onNavClick,
-                    feedbackForm, feedbackSent, sendFeedback
+                    feedbackForm, feedbackSent, feedbackError, sendFeedback
                 };
             }
         }).mount('#app');
